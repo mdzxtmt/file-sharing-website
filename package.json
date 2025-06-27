@@ -1,0 +1,70 @@
+{
+  "name": "micu-style-file-share",
+  "version": "1.0.0",
+  "description": "基于micu.wiki风格的现代化文件分享网站",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "check-services": "node scripts/check-services.js",
+    "verify-supabase": "node scripts/verify-supabase.js",
+    "setup-db": "echo '请在Supabase Dashboard的SQL Editor中执行sql/目录下的脚本'",
+    "ci:check": "npm run lint && npm run type-check && npm run check-services",
+    "ci:build": "npm run build",
+    "ci:test": "npm run ci:check && npm run ci:build",
+    "ci:env-check": "node scripts/ci-check.js",
+    "audit:security": "npm audit --audit-level=moderate",
+    "db:migrate": "node scripts/migrate-database.js migrate",
+    "db:migrate:force": "node scripts/migrate-database.js migrate --force",
+    "db:rollback": "node scripts/migrate-database.js rollback",
+    "db:status": "node scripts/migrate-database.js status",
+    "env:validate": "node scripts/env-manager.js validate",
+    "env:check": "node scripts/env-manager.js check",
+    "env:generate": "node scripts/env-manager.js generate",
+    "monitor:health": "node scripts/health-check.js",
+    "monitor:deployment": "node scripts/deployment-monitor.js",
+    "rollback:deployment": "node scripts/rollback-manager.js deployment",
+    "rollback:database": "node scripts/rollback-manager.js database",
+    "rollback:status": "node scripts/rollback-manager.js status"
+  },
+  "keywords": [
+    "file-sharing",
+    "micu-wiki-style",
+    "nextjs",
+    "supabase",
+    "modern-ui"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@headlessui/react": "^1.7.18",
+    "@heroicons/react": "^2.1.1",
+    "clsx": "^2.1.0",
+    "zustand": "^4.5.0",
+    "framer-motion": "^11.0.0",
+    "react-dropzone": "^14.2.3",
+    "react-hot-toast": "^2.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.3.0",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.2.0",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

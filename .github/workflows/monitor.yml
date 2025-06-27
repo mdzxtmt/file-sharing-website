@@ -1,0 +1,268 @@
+name: Deployment Monitoring
+
+on:
+  workflow_run:
+    workflows: ["Deploy to Vercel"]
+    types: [completed]
+  schedule:
+    # 每小时检查一次生产环境健康状态
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to monitor'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+      check_type:
+        description: 'Type of check to perform'
+        required: true
+        default: 'health'
+        type: choice
+        options:
+        - health
+        - performance
+        - full
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # 部署后监控
+  post-deployment-monitor:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Determine deployment environment
+        id: env
+        run: |
+          if [[ "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "url=${{ secrets.PRODUCTION_URL || 'https://your-domain.com' }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "develop" ]]; then
+            echo "environment=staging" >> $GITHUB_OUTPUT
+            echo "url=${{ secrets.STAGING_URL || 'https://your-staging.vercel.app' }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=preview" >> $GITHUB_OUTPUT
+            echo "url=https://preview.vercel.app" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Wait for deployment to be ready
+        run: |
+          echo "⏳ 等待部署就绪..."
+          sleep 60  # 等待1分钟让部署完全就绪
+          
+      - name: Run health check
+        id: health_check
+        run: |
+          echo "🏥 执行健康检查..."
+          node scripts/health-check.js "${{ steps.env.outputs.url }}"
+        continue-on-error: true
+        
+      - name: Record deployment metrics
+        run: |
+          echo "📊 记录部署指标..."
+          
+          # 创建部署记录
+          cat > deployment-record.json << EOF
+          {
+            "deployment_id": "${{ github.event.workflow_run.id }}",
+            "environment": "${{ steps.env.outputs.environment }}",
+            "commit": "${{ github.event.workflow_run.head_sha }}",
+            "branch": "${{ github.event.workflow_run.head_branch }}",
+            "url": "${{ steps.env.outputs.url }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "health_check_status": "${{ steps.health_check.outcome }}",
+            "workflow_run_id": "${{ github.event.workflow_run.id }}"
+          }
+          EOF
+          
+          echo "部署记录已创建"
+          cat deployment-record.json
+          
+      - name: Send deployment notification
+        if: always()
+        run: |
+          echo "📢 发送部署通知..."
+          
+          # 准备通知数据
+          if [[ "${{ steps.health_check.outcome }}" == "success" ]]; then
+            status="✅ 成功"
+            color="good"
+          else
+            status="❌ 失败"
+            color="danger"
+          fi
+          
+          # 发送Slack通知（如果配置了）
+          if [[ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{
+                \"text\": \"部署监控报告\",
+                \"attachments\": [{
+                  \"color\": \"$color\",
+                  \"fields\": [
+                    {\"title\": \"环境\", \"value\": \"${{ steps.env.outputs.environment }}\", \"short\": true},
+                    {\"title\": \"状态\", \"value\": \"$status\", \"short\": true},
+                    {\"title\": \"分支\", \"value\": \"${{ github.event.workflow_run.head_branch }}\", \"short\": true},
+                    {\"title\": \"URL\", \"value\": \"${{ steps.env.outputs.url }}\", \"short\": true}
+                  ],
+                  \"footer\": \"Deployment Monitor\",
+                  \"ts\": $(date +%s)
+                }]
+              }" \
+              "${{ secrets.SLACK_WEBHOOK_URL }}"
+          fi
+
+  # 定期健康检查
+  scheduled-health-check:
+    name: Scheduled Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    strategy:
+      matrix:
+        environment: [production, staging]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Set environment URL
+        id: env_url
+        run: |
+          if [[ "${{ matrix.environment }}" == "production" ]]; then
+            echo "url=${{ secrets.PRODUCTION_URL || 'https://your-domain.com' }}" >> $GITHUB_OUTPUT
+          else
+            echo "url=${{ secrets.STAGING_URL || 'https://your-staging.vercel.app' }}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Run comprehensive health check
+        id: health_check
+        run: |
+          echo "🏥 执行 ${{ matrix.environment }} 环境健康检查..."
+          node scripts/health-check.js "${{ steps.env_url.outputs.url }}"
+        continue-on-error: true
+        
+      - name: Performance monitoring
+        if: github.event.inputs.check_type == 'performance' || github.event.inputs.check_type == 'full'
+        run: |
+          echo "📈 执行性能监控..."
+          
+          # 使用curl测试响应时间
+          url="${{ steps.env_url.outputs.url }}"
+          
+          echo "测试主页响应时间..."
+          time_main=$(curl -o /dev/null -s -w '%{time_total}' "$url/")
+          
+          echo "测试API响应时间..."
+          time_api=$(curl -o /dev/null -s -w '%{time_total}' "$url/api/health" || echo "0")
+          
+          echo "测试文件页面响应时间..."
+          time_files=$(curl -o /dev/null -s -w '%{time_total}' "$url/files" || echo "0")
+          
+          echo "## 📈 Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Endpoint | Response Time |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|---------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Main Page | ${time_main}s |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Health | ${time_api}s |" >> $GITHUB_STEP_SUMMARY
+          echo "| Files Page | ${time_files}s |" >> $GITHUB_STEP_SUMMARY
+          
+      - name: Alert on health check failure
+        if: steps.health_check.outcome == 'failure'
+        run: |
+          echo "🚨 健康检查失败，发送告警..."
+          
+          # 发送紧急通知
+          if [[ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{
+                \"text\": \"🚨 健康检查失败告警\",
+                \"attachments\": [{
+                  \"color\": \"danger\",
+                  \"fields\": [
+                    {\"title\": \"环境\", \"value\": \"${{ matrix.environment }}\", \"short\": true},
+                    {\"title\": \"URL\", \"value\": \"${{ steps.env_url.outputs.url }}\", \"short\": true},
+                    {\"title\": \"时间\", \"value\": \"$(date -u)\", \"short\": true},
+                    {\"title\": \"状态\", \"value\": \"健康检查失败\", \"short\": true}
+                  ],
+                  \"footer\": \"Health Check Alert\",
+                  \"ts\": $(date +%s)
+                }]
+              }" \
+              "${{ secrets.SLACK_WEBHOOK_URL }}"
+          fi
+
+  # 监控报告汇总
+  monitoring-summary:
+    name: Monitoring Summary
+    runs-on: ubuntu-latest
+    needs: [post-deployment-monitor, scheduled-health-check]
+    if: always()
+    
+    steps:
+      - name: Generate monitoring summary
+        run: |
+          echo "## 📊 Deployment Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Post-deployment monitoring status
+          if [[ "${{ needs.post-deployment-monitor.result }}" == "success" ]]; then
+            echo "✅ **Post-Deployment Monitoring**: Passed" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.post-deployment-monitor.result }}" == "failure" ]]; then
+            echo "❌ **Post-Deployment Monitoring**: Failed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **Post-Deployment Monitoring**: Skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Scheduled health check status
+          if [[ "${{ needs.scheduled-health-check.result }}" == "success" ]]; then
+            echo "✅ **Scheduled Health Check**: All environments healthy" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.scheduled-health-check.result }}" == "failure" ]]; then
+            echo "❌ **Scheduled Health Check**: Issues detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ **Scheduled Health Check**: Skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Monitoring Actions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.post-deployment-monitor.result }}" == "success" ]] && [[ "${{ needs.scheduled-health-check.result }}" == "success" ]]; then
+            echo "- ✅ All monitoring checks passed" >> $GITHUB_STEP_SUMMARY
+            echo "- 📈 System is operating normally" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ Some monitoring checks failed" >> $GITHUB_STEP_SUMMARY
+            echo "- 🔍 Review detailed logs for issues" >> $GITHUB_STEP_SUMMARY
+            echo "- 📞 Consider manual investigation" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Monitoring completed at $(date -u)*" >> $GITHUB_STEP_SUMMARY
