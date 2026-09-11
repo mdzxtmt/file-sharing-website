@@ -3,10 +3,7 @@
   "name": "file-sharing-platform",
   "alias": ["file-share.vercel.app"],
   "regions": ["sin1"],
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_VERCEL_ENV": "@vercel-env"
-    }
+  
   },
   "env": {
     "NODE_ENV": "production"
