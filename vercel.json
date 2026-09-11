@@ -2,7 +2,7 @@
   "version": 2,
   "name": "file-sharing-platform",
   "alias": ["file-share.vercel.app"],
-  "regions": ["hkg1", "sin1", "sfo1", "iad1"],
+  "regions": ["sin1"],
   "build": {
     "env": {
       "NEXT_PUBLIC_VERCEL_ENV": "@vercel-env"
