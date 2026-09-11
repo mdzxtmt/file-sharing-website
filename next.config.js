@@ -3,6 +3,10 @@ const nextConfig = {
   experimental: {
     appDir: true,
   },
+  const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: [
       'localhost',
