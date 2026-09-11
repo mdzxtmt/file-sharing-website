@@ -249,7 +249,7 @@ const FileSearch: React.FC<FileSearchProps> = ({
         <div className="flex flex-wrap gap-2">
           {searchQuery && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-md">
-              搜索: "{searchQuery}"
+             搜索: &quot;{searchQuery}&quot;
               <button
                 onClick={() => setSearchQuery('')}
                 className="hover:text-primary-900 dark:hover:text-primary-100"
