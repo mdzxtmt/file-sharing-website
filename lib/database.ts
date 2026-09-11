@@ -244,7 +244,7 @@ export class TagService {
       const slug = name.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, '-')
       
       // 尝试获取现有标签
-      let { data: existingTag } = await supabase
+      const { data: existingTag } = await supabase
         .from('tags')
         .select('id')
         .eq('name', name)
