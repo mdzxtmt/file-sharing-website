@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import StatusBadge from '@/components/ai/StatusBadge';
 import { supabase } from '@/lib/supabase'; // 若路径不同请调整
 
 type FileItem = {
