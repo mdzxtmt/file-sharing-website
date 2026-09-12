@@ -1,32 +1,29 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import '../styles/globals.css'
-import { AppLayout } from '@/components/layout'
-import Navbar from '@/components/layout/Navbar'
-
-const inter = Inter({ subsets: ['latin'] })
+import type { Metadata, Viewport } from 'next';
+import './globals.css';
+import Navbar from '@/components/layout/Navbar';
 
 export const metadata: Metadata = {
-  title: '文件分享 - 现代化文件管理平台',
-  description: '基于micu.wiki风格的现代化文件分享网站，支持各种格式文件上传、分类管理、搜索和分享',
-  keywords: ['文件分享', '文件上传', '文档管理', '云存储'],
-  authors: [{ name: 'File Share Team' }],
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#409eff',
-}
+  title: '文件分享 · AI 语音',
+  description: '分享文件，克隆声音，一键生成逼真语音',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#6366f1',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
-      <body className={inter.className}>
-        <AppLayout>
-          {children}
-        </AppLayout>
+    <html lang="zh-CN">
+      <body>
+        <Navbar />
+        <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       </body>
     </html>
-  )
+  );
 }
