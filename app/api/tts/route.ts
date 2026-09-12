@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const params = new URLSearchParams({
       text: text.trim(),
       text_lang: textLang,
+      prompt_lang: textLang,
       text_split_method: 'cut5',
       batch_size: '1',
       media_type: 'wav',
