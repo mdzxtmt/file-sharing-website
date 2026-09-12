@@ -48,21 +48,21 @@ export default function TTSPage() {
   }
 
   return (
-    <div className="fade-up max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+    <div className="fade-up max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
         GPT-SoVITS 语音合成
       </h1>
       <p className="text-sm text-gray-500 mb-6">
         输入文字，选择语言，一键生成逼真语音。
       </p>
 
-      <div className="glass-card p-5 flex flex-col gap-4">
+      <div className="glass-card p-4 sm:p-5 flex flex-col gap-4">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="在这里输入要合成的文字…"
           rows={6}
-          className="w-full p-4 rounded-xl bg-white/70 dark:bg-white/10 outline-none resize-y text-sm leading-6"
+          className="w-full p-4 rounded-xl bg-white/70 dark:bg-white/10 outline-none resize-y text-sm leading-6 border border-white/40 dark:border-white/10 focus:border-indigo-400 transition"
         />
 
         <div className="flex flex-wrap items-center gap-3">
@@ -70,7 +70,7 @@ export default function TTSPage() {
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-white/70 dark:bg-white/10 outline-none text-sm"
+            className="px-3 py-2 rounded-lg bg-white/70 dark:bg-white/10 outline-none text-sm border border-white/40 dark:border-white/10"
           >
             {LANGS.map((l) => (
               <option key={l.value} value={l.value}>
@@ -89,7 +89,7 @@ export default function TTSPage() {
         </div>
 
         {audioUrl && (
-          <div className="pt-3 border-t border-white/30 flex flex-col gap-2">
+          <div className="pt-3 border-t border-white/30 dark:border-white/10 flex flex-col gap-2">
             <audio ref={audioRef} src={audioUrl} controls className="w-full" />
             <a
               href={audioUrl}
@@ -100,6 +100,10 @@ export default function TTSPage() {
             </a>
           </div>
         )}
+      </div>
+
+      <div className="mt-6 text-xs text-gray-400 leading-relaxed">
+        <p>💡 提示：合成需要几秒钟，请耐心等待。若长时间无响应，请检查导航栏状态是否为「在线」。</p>
       </div>
     </div>
   );
