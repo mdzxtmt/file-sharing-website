@@ -13,11 +13,15 @@ const NAV_ITEMS = [
 ];
 
 /* ===== 内联状态徽章 ===== */
+/* ===== 内联状态徽章（支持点击刷新） ===== */
 function StatusBadge() {
   const [online, setOnline] = useState<boolean | null>(null);
   const [latency, setLatency] = useState<number | undefined>();
+  const [checking, setChecking] = useState(false);
 
   async function check() {
+    if (checking) return; // 防止连点
+    setChecking(true);
     try {
       const res = await fetch('/api/tts-status', { cache: 'no-store' });
       const data = await res.json();
@@ -25,6 +29,10 @@ function StatusBadge() {
       setLatency(data.latency);
     } catch {
       setOnline(false);
+      setLatency(undefined);
+    } finally {
+      // 至少显示 400ms 的加载状态，避免"闪一下就没了"
+      setTimeout(() => setChecking(false), 400);
     }
   }
 
@@ -32,36 +40,87 @@ function StatusBadge() {
     check();
     const t = setInterval(check, 30000);
     return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const label =
-    online === null ? '检测中…' : online ? 'GPT-SoVITS 在线' : 'GPT-SoVITS 离线';
+    checking
+      ? '检测中…'
+      : online === null
+      ? '检测中…'
+      : online
+      ? 'GPT-SoVITS 在线'
+      : 'GPT-SoVITS 离线';
+
+  const dotColor = checking
+    ? '#6366f1'
+    : online
+    ? '#22c55e'
+    : '#ef4444';
+
+  const bg = checking
+    ? 'rgba(99,102,241,0.12)'
+    : online
+    ? 'rgba(34,197,94,0.12)'
+    : 'rgba(239,68,68,0.12)';
+
+  const fg = checking ? '#6366f1' : online ? '#16a34a' : '#dc2626';
+
+  const border = checking
+    ? 'rgba(99,102,241,0.3)'
+    : online
+    ? 'rgba(34,197,94,0.3)'
+    : 'rgba(239,68,68,0.3)';
 
   return (
     <button
       onClick={check}
-      title={online ? `延迟 ${latency ?? '-'}ms` : '服务不可用'}
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition hover:scale-105 shrink-0"
-      style={{
-        background: online ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-        color: online ? '#16a34a' : '#dc2626',
-        border: `1px solid ${online ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-      }}
+      disabled={checking}
+      title={
+        checking
+          ? '正在检测…'
+          : online
+          ? `在线 · 延迟 ${latency ?? '-'}ms · 点击刷新`
+          : '离线 · 点击重试'
+      }
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition hover:scale-105 active:scale-95 disabled:cursor-wait shrink-0"
+      style={{ background: bg, color: fg, border: `1px solid ${border}` }}
     >
+      {/* 状态圆点 */}
       <span className="relative flex h-2 w-2">
-        <span
-          className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
-          style={{ background: online ? '#22c55e' : '#ef4444' }}
-        />
+        {!checking && (
+          <span
+            className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
+            style={{ background: dotColor }}
+          />
+        )}
         <span
           className="relative inline-flex rounded-full h-2 w-2"
-          style={{ background: online ? '#22c55e' : '#ef4444' }}
+          style={{ background: dotColor }}
         />
       </span>
-      {label}
-      {online && latency !== undefined && (
+
+      <span className="whitespace-nowrap">{label}</span>
+
+      {/* 延迟显示（仅在线时） */}
+      {online && !checking && latency !== undefined && (
         <span className="opacity-60 hidden sm:inline">{latency}ms</span>
       )}
+
+      {/* 刷新图标：检测时旋转 */}
+      <svg
+        className={`w-3 h-3 transition-transform ${checking ? 'animate-spin' : ''}`}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ opacity: 0.6 }}
+      >
+        <path d="M21 12a9 9 0 1 1-3-6.7" />
+        <path d="M21 3v6h-6" />
+      </svg>
     </button>
   );
 }
