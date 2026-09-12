@@ -1,5 +1,5 @@
-import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import type { Metadata, Viewport } from 'next';
 import Navbar from '@/components/layout/Navbar';
 
 export const metadata: Metadata = {
