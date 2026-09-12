@@ -43,7 +43,7 @@
   compress: true,
 
   // 静态文件优化
-  assetPrefix: process.env.NODE_ENV === 'production' ? process.env.CDN_URL : '',
+  //assetPrefix: process.env.NODE_ENV === 'production' ? process.env.CDN_URL : '',
 
   // 输出配置
   output: 'standalone',
