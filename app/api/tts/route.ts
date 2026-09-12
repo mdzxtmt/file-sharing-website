@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       text: text.trim(),
       text_lang: textLang,
       prompt_lang: textLang,
-      text_split_method: 'cut1',
+      text_split_method: 'cut2',
       batch_size: '1',
       media_type: 'wav',
       streaming_mode: 'false',
