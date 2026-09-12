@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import StatusBadge from '@/components/ai/StatusBadge';
-import { supabase } from '@/lib/supabase'; // 若路径不同请调整
+import { supabase } from '@/lib/supabase';
 
 type FileItem = {
   id: string;
@@ -23,7 +22,6 @@ type Category = {
   name: string;
   slug: string;
   icon?: string | null;
-  color?: string | null;
 };
 
 function formatSize(bytes: number) {
@@ -37,8 +35,7 @@ function formatSize(bytes: number) {
 function formatDate(iso: string) {
   try {
     const d = new Date(iso);
-    const now = Date.now();
-    const diff = (now - d.getTime()) / 1000;
+    const diff = (Date.now() - d.getTime()) / 1000;
     if (diff < 60) return '刚刚';
     if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`;
     if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`;
@@ -58,11 +55,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, size: 0, downloads: 0 });
 
-  // 拉取分类
   useEffect(() => {
     supabase
       .from('categories')
-      .select('id,name,slug,icon,color')
+      .select('id,name,slug,icon')
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
       .then(({ data }) => {
@@ -70,7 +66,6 @@ export default function HomePage() {
       });
   }, []);
 
-  // 拉取文件
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -84,7 +79,7 @@ export default function HomePage() {
 
       if (sortBy === 'new') query = query.order('upload_time', { ascending: false });
       else if (sortBy === 'hot') query = query.order('download_count', { ascending: false });
-      else if (sortBy === 'name') query = query.order('name', { ascending: true });
+      else query = query.order('name', { ascending: true });
 
       query = query.limit(60);
 
@@ -103,7 +98,6 @@ export default function HomePage() {
     };
   }, [activeCat, sortBy]);
 
-  // 本地搜索
   const filtered = useMemo(() => {
     if (!keyword.trim()) return files;
     const k = keyword.trim().toLowerCase();
@@ -116,16 +110,13 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* ===== Hero ===== */}
+      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 sm:pt-16 sm:pb-12">
           <div className="fade-up flex flex-col items-start gap-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-xs px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-medium">
-                AI 语音 · 文件分享
-              </span>
-              <StatusBadge />
-            </div>
+            <span className="text-xs px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-medium">
+              AI 语音 · 文件分享
+            </span>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               分享文件，克隆声音
@@ -153,7 +144,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== 统计条 ===== */}
+      {/* 统计 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {[
@@ -162,18 +153,22 @@ export default function HomePage() {
             { label: '累计下载', value: stats.downloads.toLocaleString() },
           ].map((s) => (
             <div key={s.label} className="glass-card p-3 sm:p-5 text-center">
-              <div className="text-lg sm:text-2xl font-bold text-indigo-500 truncate">{s.value}</div>
+              <div className="text-lg sm:text-2xl font-bold text-indigo-500 truncate">
+                {s.value}
+              </div>
               <div className="text-[11px] sm:text-xs text-gray-500 mt-1">{s.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ===== 搜索 + 排序 ===== */}
+      {/* 搜索 + 排序 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-10">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              🔍
+            </span>
             <input
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
@@ -193,7 +188,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== 分类 pills（横向滚动） ===== */}
+      {/* 分类 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
           <button
@@ -223,7 +218,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== 文件网格 ===== */}
+      {/* 文件网格 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-24 sm:pb-16">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -237,7 +232,10 @@ export default function HomePage() {
             <div className="text-gray-500 text-sm">
               {keyword ? '没有找到匹配的文件' : '还没有文件，来上传第一个吧'}
             </div>
-            <Link href="/upload" className="btn-gradient inline-block mt-4 text-sm px-5 py-2">
+            <Link
+              href="/upload"
+              className="btn-gradient inline-block mt-4 text-sm px-5 py-2"
+            >
               上传文件
             </Link>
           </div>
@@ -250,7 +248,7 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* ===== 移动端底部浮动上传按钮 ===== */}
+      {/* 移动端浮动上传 */}
       <Link
         href="/upload"
         className="sm:hidden fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full btn-gradient flex items-center justify-center text-2xl shadow-lg"
@@ -262,13 +260,11 @@ export default function HomePage() {
   );
 }
 
-/* ===== 内联卡片组件（也可单独抽到 components/file/FileCard.tsx） ===== */
 function FileCard({ file }: { file: FileItem }) {
   const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
   const isImage = file.mime_type?.startsWith('image/');
   const isAudio = file.mime_type?.startsWith('audio/');
   const isVideo = file.mime_type?.startsWith('video/');
-
   const icon = isImage ? '🖼️' : isAudio ? '🎵' : isVideo ? '🎬' : '📄';
 
   return (
