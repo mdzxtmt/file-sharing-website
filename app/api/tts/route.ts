@@ -1,12 +1,11 @@
-// app/api/tts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60; // Vercel Pro 可更长；Hobby 上限 10s
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, textLang = 'zh', refAudioPath, promptText, promptLang = 'zh' } = await req.json();
+    const { text, textLang = 'zh' } = await req.json();
 
     if (!text || !text.trim()) {
       return NextResponse.json({ error: '文本不能为空' }, { status: 400 });
@@ -17,28 +16,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '未配置 GPT_SOVITS_API_URL' }, { status: 500 });
     }
 
-    // api_v2.py 使用 GET + query 参数
     const params = new URLSearchParams({
       text: text.trim(),
       text_lang: textLang,
-      ref_audio_path: refAudioPath || process.env.GPT_SOVITS_REF_AUDIO || '',
-      prompt_text: promptText || process.env.GPT_SOVITS_PROMPT_TEXT || '',
-      prompt_lang: promptLang,
       text_split_method: 'cut5',
       batch_size: '1',
       media_type: 'wav',
       streaming_mode: 'false',
     });
 
+    if (process.env.GPT_SOVITS_REF_AUDIO) {
+      params.set('ref_audio_path', process.env.GPT_SOVITS_REF_AUDIO);
+    }
+    if (process.env.GPT_SOVITS_PROMPT_TEXT) {
+      params.set('prompt_text', process.env.GPT_SOVITS_PROMPT_TEXT);
+      params.set('prompt_lang', textLang);
+    }
+
     const url = `${base.replace(/\/$/, '')}/tts?${params.toString()}`;
 
     const resp = await fetch(url, {
       method: 'GET',
+      cache: 'no-store',
       headers: process.env.GPT_SOVITS_API_KEY
         ? { Authorization: `Bearer ${process.env.GPT_SOVITS_API_KEY}` }
         : undefined,
-      // 避免 Next.js 缓存
-      cache: 'no-store',
     });
 
     if (!resp.ok) {
