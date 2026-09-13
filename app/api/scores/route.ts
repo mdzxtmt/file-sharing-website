@@ -52,7 +52,6 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Number(searchParams.get('limit')) || 20, 100);
 
-    // 先多取一些，用于去重后再截取
     const { data, error } = await supabase
       .from('game_scores')
       .select('id, player_name, score, wave, kills, duration, created_at')
@@ -63,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    // 按玩家名去重，每人保留最高分那条（因为已按分数降序排列）
+    // 按玩家名去重，每人保留最高分那条
     const seen = new Set<string>();
     const unique: typeof data = [];
     for (const row of data || []) {
@@ -78,5 +77,4 @@ export async function GET(req: NextRequest) {
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
-}
 }
