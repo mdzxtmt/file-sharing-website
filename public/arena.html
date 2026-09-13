@@ -2409,6 +2409,21 @@ function gameOver() {
   updateMoveStick();
   document.exitPointerLock?.();
   showOverlay('任务失败', '你被击倒了', '再来一局', true);
+  // ===== 提交分数到排行榜 =====
+try {
+  const playerName = localStorage.getItem('player_name') || '匿名玩家';
+  fetch('/api/scores', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      player_name: playerName,
+      score: score,
+      wave: wave,
+      kills: kills,
+      duration: Math.floor(performance.now() / 1000),
+    }),
+  }).catch(() => {});
+} catch (e) {}
 }
 
 ovBtn.addEventListener('click', () => {
