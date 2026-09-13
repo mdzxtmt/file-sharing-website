@@ -2156,10 +2156,13 @@ function cycleControlMode() {
   applyControlMode();
 }
 
-document.getElementById('ctrlToggle').addEventListener('click', (e) => {
-  e.stopPropagation();
+function handleCtrlToggle(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   cycleControlMode();
-});
+}
+const ctrlToggleEl = document.getElementById('ctrlToggle');
+ctrlToggleEl.addEventListener('click', handleCtrlToggle);
+ctrlToggleEl.addEventListener('touchend', handleCtrlToggle, { passive: false });
 
 /* ============================================================
    15. 键盘 / 鼠标输入
@@ -2567,10 +2570,13 @@ try {
 } catch (e) {}
 }
 
-ovBtn.addEventListener('click', () => {
+function handleOvBtn(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   if (state === 'menu' || state === 'dead') startGame();
   else if (state === 'paused') resumeGame();
-});
+}
+ovBtn.addEventListener('click', handleOvBtn);
+ovBtn.addEventListener('touchend', handleOvBtn, { passive: false });
 
 /* ============================================================
    18. 主循环
