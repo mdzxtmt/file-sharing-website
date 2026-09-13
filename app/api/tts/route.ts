@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const params = new URLSearchParams({
       text: text.trim(),
       text_lang: textLang,
-      ref_audio_path: 'custom_refs\啊那我们再演一只然后我们去室内吧，呃再演一只然后再做。.wav',
+      ref_audio_path: 'D:/tts/GPT-SoVITS-CPUFast/custom_refs/啊那我们再演一只然后我们去室内吧，呃再演一只然后再做。.wav',
       prompt_text: '啊那我们再演一只然后我们去室内吧，呃再演一只然后再做。',
       prompt_lang: 'zh',
       text_split_method: 'cut2',
