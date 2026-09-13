@@ -61,6 +61,11 @@
   letter-spacing: 2px;
   color: #8ba6c4;
 }
+.btn, .btn-toggle {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  cursor: pointer;
+}
 /* ===== 修复触摸点击 ===== */
 .btn,
 .btn-toggle,
@@ -486,8 +491,8 @@
     <b>换弹键</b><span>换弹</span>
     <b>暂停键</b><span>暂停</span>
   </div>
-  <button class="btn-toggle" id="ctrlToggle">控制模式: 自动</button>
-  <button class="btn" id="ovBtn">开始游戏</button>
+  <button class="btn-toggle" id="ctrlToggle" onclick="window.__toggleCtrl && window.__toggleCtrl()">控制模式: 自动</button>
+<button class="btn" id="ovBtn" onclick="window.__startBtn && window.__startBtn()">开始游戏</button>
 </div>
 
 <script type="importmap">
@@ -2156,13 +2161,14 @@ function cycleControlMode() {
   applyControlMode();
 }
 
-function handleCtrlToggle(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
+window.__startBtn = function () {
+  if (state === 'menu' || state === 'dead') startGame();
+  else if (state === 'paused') resumeGame();
+};
+
+window.__toggleCtrl = function () {
   cycleControlMode();
-}
-const ctrlToggleEl = document.getElementById('ctrlToggle');
-ctrlToggleEl.addEventListener('click', handleCtrlToggle);
-ctrlToggleEl.addEventListener('touchend', handleCtrlToggle, { passive: false });
+};
 
 /* ============================================================
    15. 键盘 / 鼠标输入
@@ -2570,13 +2576,14 @@ try {
 } catch (e) {}
 }
 
-function handleOvBtn(e) {
-  if (e) { e.preventDefault(); e.stopPropagation(); }
+window.__startBtn = function () {
   if (state === 'menu' || state === 'dead') startGame();
   else if (state === 'paused') resumeGame();
-}
-ovBtn.addEventListener('click', handleOvBtn);
-ovBtn.addEventListener('touchend', handleOvBtn, { passive: false });
+};
+
+window.__toggleCtrl = function () {
+  cycleControlMode();
+};
 
 /* ============================================================
    18. 主循环
