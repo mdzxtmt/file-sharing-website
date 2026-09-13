@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 const NAV_ITEMS = [
   { href: '/', label: '首页', icon: '🏠' },
   { href: '/tts', label: '语音合成', icon: '🎙️' },
+  { href: '/games', label: '小游戏', icon: '🎮' },
   { href: '/upload', label: '上传', icon: '⬆️' },
   { href: '/ranking', label: '排行', icon: '🔥' },
   { href: '/user', label: '我的', icon: '👤' },
