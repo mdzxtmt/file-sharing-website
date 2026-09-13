@@ -169,3 +169,7 @@ select:focus {
 .font-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+/* 游戏全屏时隐藏导航栏 */
+body.hide-navbar header {
+  display: none;
+}
