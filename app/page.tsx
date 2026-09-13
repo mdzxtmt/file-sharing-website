@@ -32,11 +32,11 @@ export default function HomePage() {
             </span>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              你的 AI 语音<br className="sm:hidden" />与游戏工坊
+              这是mdzxtmt<br className="sm:hidden" />的网站
             </h1>
 
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-              用 GPT-SoVITS 一键生成逼真语音，或在 3D 生存射击中挑战波次、冲击排行榜。
+              用迪克做的。
             </p>
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function HomePage() {
                     GPT-SoVITS 语音合成
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    输入文字，选择语言，一键生成逼真语音。支持中、英、日、韩、粤五种语言。
+                    输入文字，目前只有塔菲。
                   </p>
                 </div>
 
@@ -115,7 +115,7 @@ export default function HomePage() {
                     ARENA FPS
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    3D 生存射击，波次挑战、武器改装、弹反回血。支持键鼠与触屏，冲击排行榜。
+                    3D 生存射击，快点给我凹排行榜（）。
                   </p>
                 </div>
 
