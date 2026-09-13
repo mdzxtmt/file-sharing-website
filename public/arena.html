@@ -4,6 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ARENA FPS — 3D 枪战</title>
+/* ===== 返回按钮 ===== */
+#backBtn {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(10,16,26,.65);
+  border: 1px solid rgba(90,160,220,.35);
+  color: #cfe8ff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background .15s, border-color .15s, transform .15s;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#backBtn:hover {
+  background: rgba(60,140,220,.85);
+  border-color: rgba(160,230,255,.9);
+  color: #fff;
+  transform: translateY(-1px);
+}
+#backBtn:active {
+  transform: translateY(0) scale(.97);
+}
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { width:100%; height:100%; overflow:hidden; background:#06090f;
@@ -244,7 +275,7 @@
 </style>
 </head>
 <body>
-
+ <button id="backBtn" onclick="window.location.href='/games'">← 返回</button>
 <div id="hud">
   <div id="crosshair">
     <div class="bar h"></div><div class="bar v"></div><div class="dot"></div>
