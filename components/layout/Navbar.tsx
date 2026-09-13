@@ -6,22 +6,19 @@ import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [
   { href: '/', label: '首页', icon: '🏠' },
-  { href: '/tts', label: '语音合成', icon: '🎙️' },
-  { href: '/games', label: '小游戏', icon: '🎮' },
-  { href: '/upload', label: '上传', icon: '⬆️' },
-  { href: '/ranking', label: '排行', icon: '🔥' },
+  { href: '/voice', label: '语音', icon: '🎙️' },
+  { href: '/games', label: '游戏', icon: '🎮' },
   { href: '/user', label: '我的', icon: '👤' },
 ];
 
 /* ===== 内联状态徽章 ===== */
-/* ===== 内联状态徽章（支持点击刷新） ===== */
 function StatusBadge() {
   const [online, setOnline] = useState<boolean | null>(null);
   const [latency, setLatency] = useState<number | undefined>();
   const [checking, setChecking] = useState(false);
 
   async function check() {
-    if (checking) return; // 防止连点
+    if (checking) return;
     setChecking(true);
     try {
       const res = await fetch('/api/tts-status', { cache: 'no-store' });
@@ -32,7 +29,6 @@ function StatusBadge() {
       setOnline(false);
       setLatency(undefined);
     } finally {
-      // 至少显示 400ms 的加载状态，避免"闪一下就没了"
       setTimeout(() => setChecking(false), 400);
     }
   }
@@ -44,29 +40,21 @@ function StatusBadge() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const label =
-    checking
-      ? '检测中…'
-      : online === null
-      ? '检测中…'
-      : online
-      ? 'GPT-SoVITS 在线'
-      : 'GPT-SoVITS 离线';
-
-  const dotColor = checking
-    ? '#6366f1'
+  const label = checking
+    ? '检测中…'
+    : online === null
+    ? '检测中…'
     : online
-    ? '#22c55e'
-    : '#ef4444';
+    ? 'GPT-SoVITS 在线'
+    : 'GPT-SoVITS 离线';
 
+  const dotColor = checking ? '#6366f1' : online ? '#22c55e' : '#ef4444';
   const bg = checking
     ? 'rgba(99,102,241,0.12)'
     : online
     ? 'rgba(34,197,94,0.12)'
     : 'rgba(239,68,68,0.12)';
-
   const fg = checking ? '#6366f1' : online ? '#16a34a' : '#dc2626';
-
   const border = checking
     ? 'rgba(99,102,241,0.3)'
     : online
@@ -87,7 +75,6 @@ function StatusBadge() {
       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition hover:scale-105 active:scale-95 disabled:cursor-wait shrink-0"
       style={{ background: bg, color: fg, border: `1px solid ${border}` }}
     >
-      {/* 状态圆点 */}
       <span className="relative flex h-2 w-2">
         {!checking && (
           <span
@@ -100,15 +87,10 @@ function StatusBadge() {
           style={{ background: dotColor }}
         />
       </span>
-
       <span className="whitespace-nowrap">{label}</span>
-
-      {/* 延迟显示（仅在线时） */}
       {online && !checking && latency !== undefined && (
         <span className="opacity-60 hidden sm:inline">{latency}ms</span>
       )}
-
-      {/* 刷新图标：检测时旋转 */}
       <svg
         className={`w-3 h-3 transition-transform ${checking ? 'animate-spin' : ''}`}
         viewBox="0 0 24 24"
@@ -162,15 +144,17 @@ export default function Navbar() {
         }`}
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3">
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
             <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-lg font-bold shadow-md group-hover:scale-105 transition">
               M
             </span>
             <span className="font-bold text-base sm:text-lg tracking-tight hidden xs:inline">
-              文件分享
+              mdzxtmt
             </span>
           </Link>
 
+          {/* 桌面导航 */}
           <div className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const active = isActive(item.href);
@@ -190,11 +174,13 @@ export default function Navbar() {
             })}
           </div>
 
+          {/* 右侧操作区 */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="hidden sm:block">
               <StatusBadge />
             </div>
 
+            {/* 汉堡按钮 */}
             <button
               onClick={() => setOpen((v) => !v)}
               className="md:hidden relative w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/60 dark:hover:bg-white/10 transition"
