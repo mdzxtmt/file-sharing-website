@@ -51,7 +51,6 @@ export default function ArenaPage() {
         title="ARENA FPS"
         className="w-full h-full border-0"
         allow="autoplay; fullscreen; gamepad"
-        sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-fullscreen allow-popups"
       />
     </div>
   );
