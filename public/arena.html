@@ -386,6 +386,13 @@
 </style>
 </head>
 <body>
+  <!-- 独立按钮层 -->
+<div id="menuButtons" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;background:radial-gradient(ellipse at center, rgba(12,22,38,.82), rgba(4,7,12,.96));">
+  <h1 style="font-size:44px;letter-spacing:12px;font-weight:800;color:#a5e8ff;text-shadow:0 0 30px rgba(60,190,255,.5);margin-bottom:20px;">ARENA FPS</h1>
+  <div style="font-size:14px;letter-spacing:4px;color:#5f7fa3;margin-bottom:20px;">3D 生存射击</div>
+  <button id="ctrlToggle" style="pointer-events:auto;padding:12px 30px;font-size:14px;letter-spacing:2px;color:#8fe9ff;background:rgba(30,46,68,.9);border:1px solid rgba(90,160,220,.5);border-radius:10px;font-family:inherit;cursor:pointer;">控制模式: 自动</button>
+  <button id="ovBtn" style="pointer-events:auto;padding:16px 60px;font-size:16px;letter-spacing:6px;font-weight:700;color:#04121c;background:linear-gradient(180deg,#8fe9ff,#28b6e8);border:none;border-radius:12px;font-family:inherit;cursor:pointer;box-shadow:0 0 30px rgba(50,190,255,.5);">开始游戏</button>
+</div>
  <button id="backBtn" onclick="window.location.href='/games'">← 返回</button>
  <div id="rotateTip">
   <div class="icon">📱</div>
@@ -491,9 +498,7 @@
     <b>换弹键</b><span>换弹</span>
     <b>暂停键</b><span>暂停</span>
   </div>
-  <button class="btn-toggle" id="ctrlToggle" onclick="window.__toggleCtrl && window.__toggleCtrl()">控制模式: 自动</button>
-<button class="btn" id="ovBtn" onclick="window.__startBtn && window.__startBtn()">开始游戏</button>
-</div>
+  
 
 <script type="importmap">
 { "imports": { "three": "/three.module.js" } }
@@ -2431,16 +2436,13 @@ bindTapButton(btnPause, () => {
    17. 游戏流程
    ============================================================ */
 function showOverlay(title, sub, btnText, showStats = false) {
-  overlay.classList.remove('hidden');
-  overlay.querySelector('h1').textContent = title;
-  ovSub.textContent = sub;
-  ovBtn.textContent = btnText;
-  ovStats.style.display = showStats ? 'flex' : 'none';
-  if (showStats) {
-    ovScore.textContent = score;
-    ovWave.textContent = wave;
-    ovKills.textContent = kills;
-  }
+  const mb = document.getElementById('menuButtons');
+  if (mb) mb.style.display = 'flex';
+}
+
+function hideOverlay() {
+  const mb = document.getElementById('menuButtons');
+  if (mb) mb.style.display = 'none';
 }
 
 function hideOverlay() { overlay.classList.add('hidden'); }
@@ -2657,6 +2659,46 @@ function loop(now) {
   }
 
   renderer.render(scene, camera);
+  /* ===== 手机强制绑定按钮（覆盖旧绑定）===== */
+(function forceBindButtons() {
+  function bind() {
+    const ob = document.getElementById('ovBtn');
+    const ct = document.getElementById('ctrlToggle');
+
+    function handleOv(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (state === 'menu' || state === 'dead') {
+        startGame();
+      } else if (state === 'paused') {
+        resumeGame();
+      }
+      return false;
+    }
+
+    function handleCt(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cycleControlMode();
+      return false;
+    }
+
+    if (ob && !ob.__mobileBound) {
+      ob.__mobileBound = true;
+      ob.addEventListener('touchend', handleOv, { passive: false });
+      ob.addEventListener('pointerup', handleOv, { passive: false });
+    }
+    if (ct && !ct.__mobileBound) {
+      ct.__mobileBound = true;
+      ct.addEventListener('touchend', handleCt, { passive: false });
+      ct.addEventListener('pointerup', handleCt, { passive: false });
+    }
+  }
+
+  bind();
+  setTimeout(bind, 300);
+  setTimeout(bind, 1000);
+})();
 }
 
 addEventListener('resize', () => {
