@@ -61,6 +61,15 @@
   letter-spacing: 2px;
   color: #8ba6c4;
 }
+/* ===== 修复触摸点击 ===== */
+.btn,
+.btn-toggle,
+#upClose,
+#upTabs button,
+#backBtn,
+.up-card button {
+  touch-action: manipulation;
+}
 @keyframes rotatePhone {
   0%, 40% { transform: rotate(0deg); }
   60%, 100% { transform: rotate(-90deg); }
