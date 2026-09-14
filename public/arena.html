@@ -409,14 +409,23 @@ let controlMode = (() => {
     if (saved === 'touch' || saved === 'keyboard' || saved === 'auto') return saved;
   } catch(e) {}
   return 'auto';
-  /* ===== Safari 兜底：暴露全局函数给内联属性 ===== */
-window.__startGame = function () {
-  if (state === 'menu' || state === 'dead') startGame();
-  else if (state === 'paused') resumeGame();
-};
-window.__toggleCtrl = function () {
-  cycleControlMode();
-};
+  /* ===== iOS Safari 兜底：监听整个 overlay ===== */
+overlay.addEventListener('touchstart', function (e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var t = e.target;
+  // 点到"控制模式"按钮 → 切换模式
+  if (t && (t.id === 'ctrlToggle' || (t.closest && t.closest('#ctrlToggle')))) {
+    cycleControlMode();
+    return;
+  }
+  // 其它位置 → 开始游戏
+  if (state === 'menu' || state === 'dead') {
+    startGame();
+  } else if (state === 'paused') {
+    resumeGame();
+  }
+}, { passive: false });
 })();
 
 let useTouch = false;
