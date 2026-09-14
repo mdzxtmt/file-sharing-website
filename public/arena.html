@@ -283,9 +283,9 @@
   <div id="redDot"></div>
   <div id="hitmark"><span></span><span></span><span></span><span></span></div>
   <div id="topbar">
-    <div class="stat"><span class="label">SCORE</span><span class="val" id="uiScore">0</span></div>
-    <div class="stat"><span class="label">WAVE</span><span class="val" id="uiWave">1</span></div>
-    <div class="stat"><span class="label">ENEMY</span><span class="val" id="uiLeft">0</span></div>
+    <div class="stat"><span class="label">分数</span><span class="val" id="uiScore">0</span></div>
+<div class="stat"><span class="label">波次</span><span class="val" id="uiWave">1</span></div>
+<div class="stat"><span class="label">敌人</span><span class="val" id="uiLeft">0</span></div>
   </div>
   <div id="bottomLeft">
     <div id="hpbar"><div id="hpfill"></div></div>
@@ -349,9 +349,9 @@
   <h1>ARENA FPS</h1>
   <h2 id="ovSub">3D 生存射击</h2>
   <div id="ovStats" style="display:none">
-    <div><span class="v" id="ovScore">0</span><span class="k">SCORE</span></div>
-    <div><span class="v" id="ovWave">1</span><span class="k">WAVE</span></div>
-    <div><span class="v" id="ovKills">0</span><span class="k">KILLS</span></div>
+  <div><span class="v" id="ovScore">0</span><span class="k">分数</span></div>
+  <div><span class="v" id="ovWave">1</span><span class="k">波次</span></div>
+  <div><span class="v" id="ovKills">0</span><span class="k">击杀</span></div>
   </div>
   <div id="keys">
     <b>W A S D</b><span>移动</span>
@@ -1561,7 +1561,7 @@ function startWave() {
   spawnTimer = 0;
   if (wave > 1) player.hp = Math.min(player.maxHp, player.hp + 18);
   refillAllAmmo();
-  showWaveMsg('WAVE ' + wave);
+  showWaveMsg('第 ' + wave + ' 波');
   sfx.wave();
   updateHUD();
 }
