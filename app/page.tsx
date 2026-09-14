@@ -78,7 +78,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-white/30 dark:border-white/10">
-                  <span className="text-xs text-gray-400">支持 5 种语言</span>
+                  <span className="text-xs text-gray-400">支持 0 种语言</span>
                   <span className="text-sm text-indigo-500 font-semibold group-hover:translate-x-1 transition-transform">
                     立即体验 →
                   </span>
