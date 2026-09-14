@@ -383,8 +383,14 @@
     <b>换弹键</b><span>换弹</span>
     <b>暂停键</b><span>暂停</span>
   </div>
-  <button class="btn-toggle" id="ctrlToggle">控制模式: 自动</button>
-  <button class="btn" id="ovBtn">开始游戏</button>
+  <button class="btn-toggle" id="ctrlToggle" type="button"
+  onclick="window.__toggleCtrl && window.__toggleCtrl()"
+  ontouchstart="event.preventDefault(); window.__toggleCtrl && window.__toggleCtrl()"
+>控制模式: 自动</button>
+<button class="btn" id="ovBtn" type="button"
+  onclick="window.__startGame && window.__startGame()"
+  ontouchstart="event.preventDefault(); window.__startGame && window.__startGame()"
+>开始游戏</button>
 </div>
 
 <script type="importmap">
@@ -403,6 +409,14 @@ let controlMode = (() => {
     if (saved === 'touch' || saved === 'keyboard' || saved === 'auto') return saved;
   } catch(e) {}
   return 'auto';
+  /* ===== Safari 兜底：暴露全局函数给内联属性 ===== */
+window.__startGame = function () {
+  if (state === 'menu' || state === 'dead') startGame();
+  else if (state === 'paused') resumeGame();
+};
+window.__toggleCtrl = function () {
+  cycleControlMode();
+};
 })();
 
 let useTouch = false;
