@@ -393,12 +393,10 @@
 >开始游戏</button>
 </div>
 
-<script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
-</script>
+
 
 <script type="module">
-import * as THREE from 'three';
+import * as THREE from '/three.module.js';
 
 const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0
   || (navigator.userAgent && /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent));
