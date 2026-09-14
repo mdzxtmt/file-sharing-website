@@ -3,8 +3,15 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+type Game = {
+  id: string;
+  name: string;
+  icon: string;
+};
+
 type ScoreItem = {
   id: string;
+  game_key: string;
   player_name: string;
   score: number;
   wave: number;
@@ -16,43 +23,58 @@ type ScoreItem = {
 export default function UserPage() {
   const [nickname, setNickname] = useState('');
   const [saved, setSaved] = useState(false);
+  const [games, setGames] = useState<Game[]>([]);
+  const [game, setGame] = useState('');
   const [myScores, setMyScores] = useState<ScoreItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // 读取本地昵称
+  // 读取昵称
   useEffect(() => {
-    const saved = localStorage.getItem('player_name') || '';
-    setNickname(saved);
+    const name = localStorage.getItem('player_name') || '';
+    setNickname(name);
   }, []);
 
-  // 拉取成绩并按昵称过滤
+  // 加载游戏列表
   useEffect(() => {
-    if (!nickname) {
-      setLoading(false);
-      return;
-    }
-    fetch('/api/scores?limit=100')
+    fetch('/api/games')
       .then((r) => r.json())
       .then((d) => {
-        const all: ScoreItem[] = d.data || [];
-        setMyScores(all.filter((s) => s.player_name === nickname));
+        const list = d.data || [];
+        setGames(list);
+        if (list.length > 0) setGame(list[0].id);
       })
+      .catch(() => {});
+  }, []);
+
+    // 按游戏 + 玩家加载我的完整历史成绩
+  useEffect(() => {
+    if (!nickname || !game) {
+      setMyScores([]);
+      return;
+    }
+    setLoading(true);
+    fetch(`/api/scores?game=${game}&raw=1&player=${encodeURIComponent(nickname)}&limit=100`)
+      .then((r) => r.json())
+      .then((d) => setMyScores(d.data || []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [nickname, saved]);
+  }, [game, nickname, saved]);
 
   function handleSave() {
     const name = nickname.trim().slice(0, 20) || '匿名玩家';
     localStorage.setItem('player_name', name);
     setNickname(name);
-    setSaved(true);
+    setSaved((s) => !s); // 触发重新拉取
     setTimeout(() => setSaved(false), 1500);
   }
 
+  // 当前游戏统计
   const totalGames = myScores.length;
   const bestScore = myScores.reduce((m, s) => Math.max(m, s.score), 0);
   const bestWave = myScores.reduce((m, s) => Math.max(m, s.wave), 0);
   const totalKills = myScores.reduce((m, s) => m + s.kills, 0);
+
+  const gameInfo = games.find((g) => g.id === game);
 
   function formatDate(iso: string) {
     try {
@@ -65,6 +87,13 @@ export default function UserPage() {
     } catch {
       return '';
     }
+  }
+
+  function formatDuration(sec: number | null) {
+    if (!sec) return '-';
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
   }
 
   return (
@@ -98,17 +127,47 @@ export default function UserPage() {
         </div>
       </div>
 
-      {/* ===== 我的成绩统计 ===== */}
+      {/* ===== 游戏 Tab ===== */}
+      {games.length > 0 && (
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
+          {games.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => setGame(g.id)}
+              className={`shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition ${
+                game === g.id
+                  ? 'bg-indigo-500 text-white shadow'
+                  : 'bg-white/70 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20'
+              }`}
+            >
+              {g.icon} {g.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ===== 我的战绩统计 ===== */}
       <div className="glass-card p-5 sm:p-6 mb-6">
         <h2 className="text-base font-bold mb-4 flex items-center gap-2">
           📊 我的战绩
+          {gameInfo && (
+            <span className="text-sm font-normal text-gray-400">
+              · {gameInfo.icon} {gameInfo.name}
+            </span>
+          )}
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatBox label="游戏局数" value={totalGames} />
           <StatBox label="最高分" value={bestScore.toLocaleString()} highlight />
-          <StatBox label="最高波次" value={bestWave} />
-          <StatBox label="累计击杀" value={totalKills} />
+          <StatBox
+            label={game === '2048' ? '最大方块' : '最高波次'}
+            value={game === '2048' ? Math.pow(2, bestWave) : bestWave}
+          />
+          <StatBox
+            label={game === '2048' ? '最高等级' : '累计击杀'}
+            value={game === '2048' ? bestWave : totalKills}
+          />
         </div>
       </div>
 
@@ -146,7 +205,7 @@ export default function UserPage() {
             <div className="text-4xl mb-2">🎯</div>
             <p>还没有成绩记录</p>
             <Link
-              href="/games/arena"
+              href={game === '2048' ? '/games/2048' : '/games/arena'}
               className="btn-gradient inline-block mt-4 px-6 py-2.5 text-sm"
             >
               去挑战一局
@@ -154,27 +213,32 @@ export default function UserPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {myScores.slice(0, 20).map((s) => (
-              <div
-                key={s.id}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/50 dark:bg-white/5"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">
-                    第 {s.wave} 波 · 击杀 {s.kills}
+            {myScores.slice(0, 20).map((s) => {
+              const maxTile = game === '2048' ? Math.pow(2, s.wave) : null;
+              return (
+                <div
+                  key={s.id}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 transition"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium">
+                      {game === '2048'
+                        ? `最大 ${maxTile}`
+                        : `第 ${s.wave} 波 · 击杀 ${s.kills}`}
+                    </div>
+                    <div className="text-[11px] text-gray-500 mt-0.5">
+                      {formatDate(s.created_at)} · 用时 {formatDuration(s.duration)}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-gray-500 mt-0.5">
-                    {formatDate(s.created_at)}
+                  <div className="text-right shrink-0">
+                    <div className="text-lg font-bold text-indigo-500 tabular-nums">
+                      {s.score.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] text-gray-400">分</div>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-lg font-bold text-indigo-500 tabular-nums">
-                    {s.score.toLocaleString()}
-                  </div>
-                  <div className="text-[10px] text-gray-400">分</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

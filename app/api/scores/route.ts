@@ -40,23 +40,40 @@ export async function POST(req: NextRequest) {
 }
 
 // GET：查询排行榜（按游戏区分）
+// GET：查询排行榜
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const game = searchParams.get('game') || 'arena';
     const limit = Math.min(Number(searchParams.get('limit')) || 20, 100);
+    const raw = searchParams.get('raw') === '1';
+    const playerName = searchParams.get('player');
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('game_scores')
       .select('id, game_key, player_name, score, wave, kills, duration, created_at')
-      .eq('game_key', game)
-      .order('score', { ascending: false })
-      .order('created_at', { ascending: true })
-      .limit(500);
+      .eq('game_key', game);
 
+    // 按玩家过滤（用于"我的成绩"）
+    if (playerName) {
+      query = query.eq('player_name', playerName);
+    }
+
+    query = query
+      .order('score', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(raw ? 500 : 500);
+
+    const { data, error } = await query;
     if (error) throw error;
 
-    // 按玩家去重，保留最高分
+    // raw=1 时不去重，返回原始记录
+    if (raw) {
+      const sliced = (data || []).slice(0, limit);
+      return NextResponse.json({ data: sliced });
+    }
+
+    // 默认：按玩家去重，保留最高分
     const seen = new Set<string>();
     const unique: typeof data = [];
     for (const row of data || []) {
