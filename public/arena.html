@@ -4,91 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ARENA FPS — 3D 枪战</title>
-
 <style>
-  /* ===== 返回按钮 ===== */
-#backBtn {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 100;
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: rgba(10,16,26,.65);
-  border: 1px solid rgba(90,160,220,.35);
-  color: #cfe8ff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background .15s, border-color .15s, transform .15s;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-#backBtn:hover {
-  background: rgba(60,140,220,.85);
-  border-color: rgba(160,230,255,.9);
-  color: #fff;
-  transform: translateY(-1px);
-}
-#backBtn:active {
-  transform: translateY(0) scale(.97);
-}
-/* ===== 竖屏提示 ===== */
-#rotateTip {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: #06090f;
-  color: #cfe8ff;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  text-align: center;
-  padding: 20px;
-}
-#rotateTip .icon {
-  font-size: 56px;
-  animation: rotatePhone 1.6s ease-in-out infinite;
-}
-#rotateTip .txt {
-  font-size: 15px;
-  letter-spacing: 2px;
-  color: #8ba6c4;
-}
-.btn, .btn-toggle {
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-  cursor: pointer;
-}
-/* ===== 修复触摸点击 ===== */
-.btn,
-.btn-toggle,
-#upClose,
-#upTabs button,
-#backBtn,
-.up-card button {
-  touch-action: manipulation;
-}
-@keyframes rotatePhone {
-  0%, 40% { transform: rotate(0deg); }
-  60%, 100% { transform: rotate(-90deg); }
-}
-@media (orientation: portrait) and (max-width: 900px) {
-  #rotateTip { display: flex; }
-}
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { width:100%; height:100%; overflow:hidden; background:#06090f;
     font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     user-select:none; color:#dfe8f5;
-    touch-action:none; -webkit-user-select:none; -webkit-touch-callout:none;
+    -webkit-user-select:none; -webkit-touch-callout:none;
     -webkit-tap-highlight-color:transparent; }
-  canvas { display:block; }
+  canvas { display:block; touch-action:none; }
+  button, .btn, .btn-toggle, .tb { touch-action: manipulation; }
   #hud { position:fixed; inset:0; pointer-events:none; z-index:5; }
   #crosshair { position:absolute; left:50%; top:50%; width:26px; height:26px; transform:translate(-50%,-50%); }
   #crosshair .bar { position:absolute; background:#7dfcff; box-shadow:0 0 6px #22d3ee; border-radius:2px; opacity:.85; }
@@ -170,7 +94,6 @@
   #scope .ch { position:absolute; background:rgba(0,0,0,.85); }
   #scope .ch.h { left:0; right:0; top:50%; height:1px; }
   #scope .ch.v { top:0; bottom:0; left:50%; width:1px; }
-  /* 触摸控件 */
   #touchControls { position:fixed; inset:0; z-index:15; display:none; pointer-events:none; }
   #touchControls.active { display:block; }
   #moveStick {
@@ -238,7 +161,6 @@
                 border-color:rgba(255,180,80,.5); color:#ffce88; }
   #btnPause   { left:24px;  top:24px; width:54px; height:54px; font-size:11px; }
   #touchControls.active ~ #hud #topbar { top:88px; }
-  /* 改装菜单 */
   #upgradeMenu { position:fixed; inset:0; z-index:25; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:20px;
     background:radial-gradient(ellipse at center, rgba(10,18,30,.94), rgba(3,6,11,.985));
@@ -304,100 +226,63 @@
     border:1px solid rgba(90,160,220,.45); border-radius:8px;
     cursor:pointer; font-family:inherit; transition:.15s; }
   .btn-toggle:hover { background:rgba(40,62,92,.9); border-color:rgba(140,210,255,.7); color:#cfe8ff; }
- @media (max-width: 900px) {
-  #overlay h1 { font-size: 32px; letter-spacing: 8px; }
-  #keys, #keysTouch { font-size: 11px; }
 
-  /* 顶部统计栏 */
-  #topbar {
-    padding: 6px 14px;
-    gap: 16px;
-    top: 10px;
+  #backBtn {
+    position: fixed; top: 14px; left: 14px; z-index: 100;
+    padding: 8px 16px; border-radius: 10px;
+    background: rgba(10,16,26,.65);
+    border: 1px solid rgba(90,160,220,.35);
+    color: #cfe8ff; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; gap: 4px;
   }
-  .stat { min-width: 48px; }
-  .stat .label { font-size: 9px; }
-  .stat .val { font-size: 15px; }
+  #backBtn:active { transform: scale(.95); }
 
-  /* 左下血量 */
-  #bottomLeft {
-    width: 140px;
-    left: 14px;
-    bottom: 14px;
+  #rotateTip {
+    display: none; position: fixed; inset: 0; z-index: 9000;
+    background: #06090f; color: #cfe8ff;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 20px; text-align: center; padding: 20px;
   }
-  #hpbar { height: 10px; }
-  #hptext { font-size: 10px; margin-top: 3px; }
-
-  /* 右下弹药 */
-  #bottomRight {
-    right: 14px;
-    bottom: 14px;
+  #rotateTip .icon { font-size: 56px; animation: rotatePhone 1.6s ease-in-out infinite; }
+  #rotateTip .txt { font-size: 15px; letter-spacing: 2px; color: #8ba6c4; }
+  @keyframes rotatePhone {
+    0%, 40% { transform: rotate(0deg); }
+    60%, 100% { transform: rotate(-90deg); }
   }
-  #ammo { font-size: 22px; }
-  #weaponName { font-size: 10px; letter-spacing: 1.5px; }
-  #reloadHint { font-size: 10px; }
 
-  /* 武器槽 */
-  #slots {
-    right: 14px;
-    bottom: 68px;
+  @media (max-width: 900px) {
+    #overlay h1 { font-size:32px; letter-spacing:8px; }
+    #keys, #keysTouch { font-size:12px; }
+    #topbar { padding:6px 14px; gap:16px; top:10px; }
+    .stat { min-width:48px; }
+    .stat .label { font-size:9px; }
+    .stat .val { font-size:15px; }
+    #bottomLeft { width:140px; left:14px; bottom:14px; }
+    #hpbar { height:10px; }
+    #hptext { font-size:10px; margin-top:3px; }
+    #bottomRight { right:14px; bottom:14px; }
+    #ammo { font-size:22px; }
+    #weaponName { font-size:10px; letter-spacing:1.5px; }
+    #reloadHint { font-size:10px; }
+    #slots { right:14px; bottom:68px; }
+    #slots .slot { font-size:9px; padding:2px 6px; }
+    #qte .label { font-size:14px; letter-spacing:2px; }
+    #qte .label .key { font-size:13px; padding:0 8px 2px; }
+    #qte .bar { width:140px; height:5px; }
+    #backBtn { top: 8px; left: 8px; padding: 6px 12px; font-size: 11px; }
   }
-  #slots .slot { font-size: 9px; padding: 2px 6px; }
-
-  /* QTE */
-  #qte .label { font-size: 14px; letter-spacing: 2px; }
-  #qte .label .key { font-size: 13px; padding: 0 8px 2px; }
-  #qte .bar { width: 140px; height: 5px; }
-}
-
-/* 横屏手机专用（高度较小） */
-@media (orientation: landscape) and (max-height: 500px) {
-  #topbar { top: 6px; padding: 4px 12px; gap: 14px; }
-  .stat .val { font-size: 13px; }
-  .stat .label { font-size: 8px; }
-  .stat { min-width: 42px; }
-
-  #bottomLeft { left: 10px; bottom: 10px; width: 120px; }
-  #bottomRight { right: 10px; bottom: 10px; }
-  #ammo { font-size: 20px; }
-  #slots { right: 10px; bottom: 58px; }
-
-  #moveStick {
-    left: 18px;
-    bottom: 18px;
-    width: 110px;
-    height: 110px;
-  }
-  #moveStickKnob { width: 50px; height: 50px; }
-
-  #btnFire { right: 16px; bottom: 16px; width: 80px; height: 80px; font-size: 13px; }
-  #btnAim { right: 16px; bottom: 108px; width: 62px; height: 62px; font-size: 11px; }
-  #btnReload { right: 108px; bottom: 16px; width: 58px; height: 58px; font-size: 11px; }
-  #btnJump { right: 108px; bottom: 86px; width: 58px; height: 58px; font-size: 11px; }
-  #btnParry { right: 116px; bottom: 154px; width: 72px; height: 72px; font-size: 12px; }
-
-  #btnW1, #btnW2, #btnW3 { width: 42px; height: 42px; font-size: 10px; }
-  #btnW2 { right: 68px; }
-  #btnW3 { right: 120px; }
-  #btnUpgrade { width: 56px; height: 56px; font-size: 10px; top: 72px; }
-  #btnPause { width: 42px; height: 42px; font-size: 10px; }
-
-  #backBtn { top: 8px; left: 8px; padding: 6px 12px; font-size: 11px; }
-}
 </style>
 </head>
 <body>
-  <!-- 独立按钮层 -->
-<div id="menuButtons" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;background:radial-gradient(ellipse at center, rgba(12,22,38,.82), rgba(4,7,12,.96));">
-  <h1 style="font-size:44px;letter-spacing:12px;font-weight:800;color:#a5e8ff;text-shadow:0 0 30px rgba(60,190,255,.5);margin-bottom:20px;">ARENA FPS</h1>
-  <div style="font-size:14px;letter-spacing:4px;color:#5f7fa3;margin-bottom:20px;">3D 生存射击</div>
-  <button id="ctrlToggle" style="pointer-events:auto;padding:12px 30px;font-size:14px;letter-spacing:2px;color:#8fe9ff;background:rgba(30,46,68,.9);border:1px solid rgba(90,160,220,.5);border-radius:10px;font-family:inherit;cursor:pointer;">控制模式: 自动</button>
-  <button id="ovBtn" style="pointer-events:auto;padding:16px 60px;font-size:16px;letter-spacing:6px;font-weight:700;color:#04121c;background:linear-gradient(180deg,#8fe9ff,#28b6e8);border:none;border-radius:12px;font-family:inherit;cursor:pointer;box-shadow:0 0 30px rgba(50,190,255,.5);">开始游戏</button>
-</div>
- <button id="backBtn" onclick="window.location.href='/games'">← 返回</button>
- <div id="rotateTip">
+
+<button id="backBtn" onclick="location.href='/games'">← 返回</button>
+<div id="rotateTip">
   <div class="icon">📱</div>
   <div class="txt">请横屏使用</div>
 </div>
+
 <div id="hud">
   <div id="crosshair">
     <div class="bar h"></div><div class="bar v"></div><div class="dot"></div>
@@ -498,18 +383,17 @@
     <b>换弹键</b><span>换弹</span>
     <b>暂停键</b><span>暂停</span>
   </div>
-  
+  <button class="btn-toggle" id="ctrlToggle">控制模式: 自动</button>
+  <button class="btn" id="ovBtn">开始游戏</button>
+</div>
 
 <script type="importmap">
-{ "imports": { "three": "/three.module.js" } }
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
 
 <script type="module">
 import * as THREE from 'three';
 
-/* ============================================================
-   0. 设备检测 + 控制模式
-   ============================================================ */
 const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0
   || (navigator.userAgent && /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(navigator.userAgent));
 
@@ -523,9 +407,6 @@ let controlMode = (() => {
 
 let useTouch = false;
 
-/* ============================================================
-   1. 基础
-   ============================================================ */
 const ARENA = 30;
 const EYE_HEIGHT = 1.65;
 const PLAYER_RADIUS = 0.45;
@@ -576,9 +457,6 @@ const rim = new THREE.DirectionalLight(0x7fb4ff, 1.1);
 rim.position.set(-24, 18, -22);
 scene.add(rim);
 
-/* ============================================================
-   2. 武器数据
-   ============================================================ */
 const BASE_WEAPONS = {
   rifle: {
     key: 'rifle', slot: 1, name: 'AR-15',
@@ -687,9 +565,6 @@ let semiLatch = false;
 let burstRemaining = 0;
 let burstTimer = 0;
 
-/* ============================================================
-   3. 世界构建
-   ============================================================ */
 const colliders = [];
 const wallMeshes = [];
 
@@ -771,9 +646,6 @@ function getGroundHeight(x, z) {
   return maxH;
 }
 
-/* ============================================================
-   4. 玩家 + 状态
-   ============================================================ */
 const player = {
   pos: new THREE.Vector3(0, EYE_HEIGHT, 24),
   vel: new THREE.Vector3(),
@@ -806,14 +678,10 @@ let qteSuccess = 0;
 let healFlash = 0;
 let healTextT = 0;
 
-// 触摸状态
 const touchLeft = { id: null, startX: 0, startY: 0, curX: 0, curY: 0 };
 const touchLook = { id: null, lastX: 0, lastY: 0 };
 const touchMoveVec = { x: 0, y: 0 };
 
-/* ============================================================
-   5. 枪械视图模型
-   ============================================================ */
 const gunGroups = {};
 
 const SUPPRESSOR_PARAMS = {
@@ -1066,9 +934,6 @@ const MUZZLE_LIGHT_POS = {
 };
 muzzleLight.position.copy(MUZZLE_LIGHT_POS[curWeapon]);
 
-/* ============================================================
-   6. 音效
-   ============================================================ */
 let actx = null;
 function ensureAudio() {
   if (!actx) {
@@ -1128,9 +993,6 @@ const sfx = {
   heal() { tone(500, 1200, 0.22, 0.10, 'sine'); tone(800, 1600, 0.18, 0.06, 'triangle'); }
 };
 
-/* ============================================================
-   7. 敌人
-   ============================================================ */
 const enemies = [];
 const bullets = [];
 const effects = [];
@@ -1309,9 +1171,6 @@ function updateEnemies(dt) {
   }
 }
 
-/* ============================================================
-   8. 子弹 / QTE / 特效
-   ============================================================ */
 function updateBullets(dt) {
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
@@ -1572,9 +1431,6 @@ function updateEffects(dt) {
   muzzleLight.intensity *= Math.exp(-dt * 26);
 }
 
-/* ============================================================
-   9. 射击 / 伤害
-   ============================================================ */
 function playShootSound() {
   const Wp = WEAPONS[curWeapon];
   const sup = Wp.suppressor;
@@ -1705,9 +1561,6 @@ function setAiming(on) {
   aiming = on;
 }
 
-/* ============================================================
-   10. 波次系统
-   ============================================================ */
 let pendingSpawns = 0;
 let spawnTimer = 0;
 let waveCooldown = 0;
@@ -1761,9 +1614,6 @@ function updateWave(dt) {
   }
 }
 
-/* ============================================================
-   11. 玩家更新
-   ============================================================ */
 function updatePlayer(dt) {
   const yaw = player.yaw;
   const fwdX = -Math.sin(yaw), fwdZ = -Math.cos(yaw);
@@ -1949,9 +1799,6 @@ function updateWeapon(dt) {
   }
 }
 
-/* ============================================================
-   12. HUD
-   ============================================================ */
 const uiScore = document.getElementById('uiScore');
 const uiWave = document.getElementById('uiWave');
 const uiLeft = document.getElementById('uiLeft');
@@ -2001,9 +1848,6 @@ function updateHUD() {
   for (const k in slotEls) slotEls[k].classList.toggle('active', k === curWeapon);
 }
 
-/* ============================================================
-   13. 改装菜单
-   ============================================================ */
 const upgradeMenuEl = document.getElementById('upgradeMenu');
 const upTabsEl = document.getElementById('upTabs');
 const upBodyEl = document.getElementById('upBody');
@@ -2105,9 +1949,6 @@ function buyUpgrade(weaponKey, attId) {
 
 upCloseBtn.addEventListener('click', closeUpgradeMenu);
 
-/* ============================================================
-   14. 控制模式切换
-   ============================================================ */
 function resolveControlMode() {
   if (controlMode === 'touch') return true;
   if (controlMode === 'keyboard') return false;
@@ -2145,7 +1986,6 @@ function applyControlMode() {
     tc.classList.remove('active');
     keysKB.style.display = 'grid';
     keysT.style.display = 'none';
-    // 清除触摸状态
     touchLeft.id = null;
     touchLook.id = null;
     touchMoveVec.x = 0; touchMoveVec.y = 0;
@@ -2166,18 +2006,16 @@ function cycleControlMode() {
   applyControlMode();
 }
 
-window.__startBtn = function () {
-  if (state === 'menu' || state === 'dead') startGame();
-  else if (state === 'paused') resumeGame();
-};
-
-window.__toggleCtrl = function () {
+// ===== 控制模式按钮：三种事件 =====
+function handleCtrlBtn(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   cycleControlMode();
-};
+}
+const ctrlBtn = document.getElementById('ctrlToggle');
+ctrlBtn.addEventListener('click', handleCtrlBtn);
+ctrlBtn.addEventListener('touchend', handleCtrlBtn, { passive: false });
+ctrlBtn.addEventListener('pointerup', handleCtrlBtn);
 
-/* ============================================================
-   15. 键盘 / 鼠标输入
-   ============================================================ */
 addEventListener('keydown', e => {
   if (state === 'upgrade') {
     if (e.code === 'KeyB' || e.code === 'Escape') closeUpgradeMenu();
@@ -2186,7 +2024,6 @@ addEventListener('keydown', e => {
 
   keys[e.code] = true;
 
-  // 键盘 F 弹反（无论哪种模式都能用）
   if (e.code === 'KeyF' && qteActive) {
     tryParry();
     e.preventDefault();
@@ -2251,9 +2088,6 @@ document.addEventListener('pointerlockchange', () => {
   }
 });
 
-/* ============================================================
-   16. 触摸输入
-   ============================================================ */
 const touchControlsEl = document.getElementById('touchControls');
 const moveStickEl = document.getElementById('moveStick');
 const moveStickKnob = document.getElementById('moveStickKnob');
@@ -2432,17 +2266,17 @@ bindTapButton(btnPause, () => {
   }
 });
 
-/* ============================================================
-   17. 游戏流程
-   ============================================================ */
 function showOverlay(title, sub, btnText, showStats = false) {
-  const mb = document.getElementById('menuButtons');
-  if (mb) mb.style.display = 'flex';
-}
-
-function hideOverlay() {
-  const mb = document.getElementById('menuButtons');
-  if (mb) mb.style.display = 'none';
+  overlay.classList.remove('hidden');
+  overlay.querySelector('h1').textContent = title;
+  ovSub.textContent = sub;
+  ovBtn.textContent = btnText;
+  ovStats.style.display = showStats ? 'flex' : 'none';
+  if (showStats) {
+    ovScore.textContent = score;
+    ovWave.textContent = wave;
+    ovKills.textContent = kills;
+  }
 }
 
 function hideOverlay() { overlay.classList.add('hidden'); }
@@ -2561,35 +2395,34 @@ function gameOver() {
   updateMoveStick();
   document.exitPointerLock?.();
   showOverlay('任务失败', '你被击倒了', '再来一局', true);
+
   // ===== 提交分数到排行榜 =====
-try {
-  const playerName = localStorage.getItem('player_name') || '匿名玩家';
-  fetch('/api/scores', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      player_name: playerName,
-      score: score,
-      wave: wave,
-      kills: kills,
-      duration: Math.floor(performance.now() / 1000),
-    }),
-  }).catch(() => {});
-} catch (e) {}
+  try {
+    const playerName = localStorage.getItem('player_name') || '匿名玩家';
+    fetch('/api/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_name: playerName,
+        score: score,
+        wave: wave,
+        kills: kills,
+        duration: Math.floor(performance.now() / 1000),
+      }),
+    }).catch(() => {});
+  } catch (e) {}
 }
 
-window.__startBtn = function () {
+// ===== 开始游戏按钮：三种事件 =====
+function handleStartBtn(e) {
+  if (e) { e.preventDefault(); e.stopPropagation(); }
   if (state === 'menu' || state === 'dead') startGame();
   else if (state === 'paused') resumeGame();
-};
+}
+ovBtn.addEventListener('click', handleStartBtn);
+ovBtn.addEventListener('touchend', handleStartBtn, { passive: false });
+ovBtn.addEventListener('pointerup', handleStartBtn);
 
-window.__toggleCtrl = function () {
-  cycleControlMode();
-};
-
-/* ============================================================
-   18. 主循环
-   ============================================================ */
 let lastT = performance.now();
 
 function loop(now) {
@@ -2659,46 +2492,6 @@ function loop(now) {
   }
 
   renderer.render(scene, camera);
-  /* ===== 手机强制绑定按钮（覆盖旧绑定）===== */
-(function forceBindButtons() {
-  function bind() {
-    const ob = document.getElementById('ovBtn');
-    const ct = document.getElementById('ctrlToggle');
-
-    function handleOv(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (state === 'menu' || state === 'dead') {
-        startGame();
-      } else if (state === 'paused') {
-        resumeGame();
-      }
-      return false;
-    }
-
-    function handleCt(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      cycleControlMode();
-      return false;
-    }
-
-    if (ob && !ob.__mobileBound) {
-      ob.__mobileBound = true;
-      ob.addEventListener('touchend', handleOv, { passive: false });
-      ob.addEventListener('pointerup', handleOv, { passive: false });
-    }
-    if (ct && !ct.__mobileBound) {
-      ct.__mobileBound = true;
-      ct.addEventListener('touchend', handleCt, { passive: false });
-      ct.addEventListener('pointerup', handleCt, { passive: false });
-    }
-  }
-
-  bind();
-  setTimeout(bind, 300);
-  setTimeout(bind, 1000);
-})();
 }
 
 addEventListener('resize', () => {
@@ -2707,11 +2500,24 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-/* 初始化 */
 applyControlMode();
 updateHUD();
 updateTouchWeaponButtons();
 requestAnimationFrame(loop);
+
+// ===== 横屏检测 =====
+function checkOrientation() {
+  const tip = document.getElementById('rotateTip');
+  if (!tip) return;
+  if (window.innerHeight > window.innerWidth && window.innerWidth < 900) {
+    tip.style.display = 'flex';
+  } else {
+    tip.style.display = 'none';
+  }
+}
+window.addEventListener('resize', checkOrientation);
+window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 200));
+checkOrientation();
 </script>
 </body>
 </html>
