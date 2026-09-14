@@ -50,15 +50,15 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 sm:pt-20 sm:pb-16">
           <div className="fade-up flex flex-col items-start gap-5 max-w-3xl">
             <span className="text-xs px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-medium">
-              AI 语音 · 小游戏
+              我是屎
             </span>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              你的 AI 语音<br className="sm:hidden" />与游戏工坊
+              这是mdzxtm<br className="sm:hidden" />的网站
             </h1>
 
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
-              用 GPT-SoVITS 一键生成逼真语音，或在游戏中挑战记录、冲击排行榜。
+              用迪克做的。
             </p>
           </div>
         </div>
@@ -95,12 +95,12 @@ export default function HomePage() {
                     GPT-SoVITS 语音合成
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    输入文字，选择语言，一键生成逼真语音。支持中、英、日、韩、粤五种语言。
+                    请输入文本，目前只有塔菲。
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-white/30 dark:border-white/10">
-                  <span className="text-xs text-gray-400">支持 5 种语言</span>
+                  <span className="text-xs text-gray-400">支持 0 种语言</span>
                   <span className="text-sm text-indigo-500 font-semibold group-hover:translate-x-1 transition-transform">
                     立即体验 →
                   </span>
@@ -134,10 +134,10 @@ export default function HomePage() {
 
                 <div className="flex-1">
                   <h2 className="text-xl sm:text-2xl font-bold mb-2 group-hover:text-orange-500 transition">
-                    3D 枪战 · 2048
+                    给木
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    ARENA FPS 生存射击，或 2048 数字合并。支持手机和电脑，冲击排行榜。
+                    一堆给木，快点给我凹排行榜（）。
                   </p>
                 </div>
 
