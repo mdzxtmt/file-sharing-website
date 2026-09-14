@@ -28,7 +28,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 sm:pt-20 sm:pb-16">
           <div className="fade-up flex flex-col items-start gap-5 max-w-3xl">
             <span className="text-xs px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-medium">
-              AI 语音 · 3D 游戏
+              我是屎
             </span>
 
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold leading-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
