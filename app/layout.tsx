@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import Navbar from '@/components/layout/Navbar';
 
 export const metadata: Metadata = {
-  title: '文件分享 · AI 语音',
+  title: 'mdzxtmt',
   description: '分享文件，克隆声音，一键生成逼真语音',
 };
 
