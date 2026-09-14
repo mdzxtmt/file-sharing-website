@@ -85,6 +85,47 @@ export default function GamesPage() {
           </div>
         </div>
       </Link>
+            {/* 2048 入口 */}
+      <Link href="/games/2048" className="block group mb-10">
+        <div className="glass-card overflow-hidden relative">
+          <div
+            className="absolute inset-0 opacity-90"
+            style={{
+              background: 'linear-gradient(135deg, rgba(249,168,38,0.15), rgba(237,194,46,0.12))',
+            }}
+          />
+          <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
+            <div
+              className="w-20 h-20 sm:w-28 sm:h-28 shrink-0 rounded-2xl flex items-center justify-center text-5xl sm:text-6xl shadow-lg group-hover:scale-105 transition"
+              style={{ background: 'linear-gradient(135deg,#f9a826,#edc22e)' }}
+            >
+              🔢
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold">2048</h2>
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/50 dark:border-white/10 text-gray-600 dark:text-gray-300 font-medium">
+                  数字合并
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-xl">
+                滑动合并相同数字，挑战 2048 方块。支持键盘方向键和手机滑动。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-3 justify-center sm:justify-start text-xs text-gray-500">
+                <span>📱 触摸滑动</span>
+                <span>⌨️ 方向键</span>
+                <span>🏆 排行榜</span>
+              </div>
+            </div>
+            <div className="shrink-0">
+              <span className="btn-gradient inline-block px-7 py-3 text-sm group-hover:translate-x-1 transition-transform">
+                开始游戏 →
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+
 
       {/* 排行预览 */}
       <div className="glass-card p-5 sm:p-6">

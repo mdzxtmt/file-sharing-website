@@ -2348,6 +2348,7 @@ function gameOver() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        game_key: 'arena',
         player_name: playerName,
         score: score,
         wave: wave,
