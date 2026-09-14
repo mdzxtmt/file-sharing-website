@@ -398,6 +398,46 @@ let controlMode = (() => {
     if (saved === 'touch' || saved === 'keyboard' || saved === 'auto') return saved;
   } catch(e) {}
   return 'auto';
+  /* ===== iOS Safari 终极兜底：整个 overlay 都可点 ===== */
+(function bindOverlayTouch() {
+  if (!overlay) return;
+  overlay.addEventListener('touchstart', function (e) {
+    const t = e.target;
+    // 点到"控制模式"按钮 → 切换模式
+    if (t && (t.id === 'ctrlToggle' || (t.closest && t.closest('#ctrlToggle')))) {
+      e.preventDefault();
+      e.stopPropagation();
+      cycleControlMode();
+      return;
+    }
+    // 其他任何位置 → 开始游戏 / 继续
+    e.preventDefault();
+    e.stopPropagation();
+    if (state === 'menu' || state === 'dead') {
+      startGame();
+    } else if (state === 'paused') {
+      resumeGame();
+    }
+  }, { passive: false });
+
+  // 电脑鼠标点击也支持
+  overlay.addEventListener('click', function (e) {
+    const t = e.target;
+    if (t && (t.id === 'ctrlToggle' || (t.closest && t.closest('#ctrlToggle')))) {
+      e.preventDefault();
+      e.stopPropagation();
+      cycleControlMode();
+      return;
+    }
+    if (state === 'menu' || state === 'dead') {
+      e.preventDefault();
+      startGame();
+    } else if (state === 'paused') {
+      e.preventDefault();
+      resumeGame();
+    }
+  });
+})();
 })();
 
 let useTouch = false;
