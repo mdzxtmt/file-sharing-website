@@ -73,7 +73,7 @@ export default function HomePage() {
                     GPT-SoVITS 语音合成
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                    输入文字，目前只有塔菲。
+                    请输入文本，目前只有塔菲。
                   </p>
                 </div>
 
