@@ -84,7 +84,14 @@ export async function GET(req: NextRequest) {
       if (unique.length >= limit) break;
     }
 
-    return NextResponse.json({ data: unique });
+        return NextResponse.json(
+      { data: unique },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
+      }
+    );
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

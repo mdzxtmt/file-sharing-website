@@ -10,7 +10,7 @@ const supabase = createClient(
 );
 
 // GET：获取活跃游戏列表（公开）
-   export async function GET() {
+ export async function GET() {
   try {
     const { data, error } = await supabase
       .from('games')
@@ -24,7 +24,7 @@ const supabase = createClient(
       { data: data || [] },
       {
         headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         },
       }
     );
