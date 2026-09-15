@@ -33,7 +33,7 @@ export default function GamesPage() {
   const loadGames = async () => {
     setRefreshing(true);
     try {
-      const res = await fetch('/api/games');
+      const res = await fetch('/api/games?t=' + Date.now(), { cache: 'no-store' });
       const d = await res.json();
       const list = d.data || [];
       setGames(list);
@@ -53,7 +53,7 @@ export default function GamesPage() {
   useEffect(() => {
     if (!rankGame) return;
     setLoading(true);
-    fetch(`/api/scores?game=${rankGame}&limit=5`)
+    fetch(`/api/scores?game=${rankGame}&limit=5&t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setTopScores(d.data || []))
       .catch(() => {})

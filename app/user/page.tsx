@@ -36,7 +36,7 @@ export default function UserPage() {
 
   // 加载游戏列表
   useEffect(() => {
-    fetch('/api/games')
+    fetch('/api/games?t=' + Date.now(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         const list = d.data || [];
@@ -53,7 +53,7 @@ export default function UserPage() {
       return;
     }
     setLoading(true);
-    fetch(`/api/scores?game=${game}&raw=1&player=${encodeURIComponent(nickname)}&limit=100`)
+    fetch(`/api/scores?game=${game}&raw=1&player=${encodeURIComponent(nickname)}&limit=100&t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setMyScores(d.data || []))
       .catch(() => {})

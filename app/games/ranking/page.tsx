@@ -29,7 +29,7 @@ export default function RankingPage() {
 
   // 加载游戏列表
   useEffect(() => {
-    fetch('/api/games')
+    fetch('/api/games?t=' + Date.now(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         const list = d.data || [];
@@ -43,7 +43,7 @@ export default function RankingPage() {
   useEffect(() => {
     if (!game) return;
     setLoading(true);
-    fetch(`/api/scores?game=${game}&limit=50`)
+    fetch(`/api/scores?game=${game}&limit=50&t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setScores(d.data || []))
       .catch(() => {})

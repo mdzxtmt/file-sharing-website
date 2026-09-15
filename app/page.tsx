@@ -24,7 +24,7 @@ export default function HomePage() {
 
   // 加载游戏列表
   useEffect(() => {
-    fetch('/api/games')
+    fetch('/api/games?t=' + Date.now(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
         const list = d.data || [];
@@ -37,7 +37,7 @@ export default function HomePage() {
   // 加载当前游戏 Top 3
   useEffect(() => {
     if (!game) return;
-    fetch(`/api/scores?game=${game}&limit=3`)
+    fetch(`/api/scores?game=${game}&limit=3&t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setTopScores(d.data || []))
       .catch(() => {});
