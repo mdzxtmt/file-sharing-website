@@ -12,12 +12,28 @@ const supabase = createClient(
 // GET：获取活跃游戏列表（公开）
 export async function GET() {
   try {
+    export async function GET() {
+  try {
     const { data, error } = await supabase
       .from('games')
-      .select('id, name, icon, description, path, tag, gradient, color, sort_order, is_active')
+      .select('id, name, icon, description, path, tag, gradient, color, has_score, sort_order, is_active')
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
+    if (error) throw error;
+
+    return NextResponse.json(
+      { data: data || [] },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
     if (error) throw error;
     return NextResponse.json({ data: data || [] });
   } catch (e: any) {
