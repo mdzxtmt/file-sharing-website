@@ -27,17 +27,27 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [rankGame, setRankGame] = useState('');
   const [topScores, setTopScores] = useState<ScoreItem[]>([]);
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadGames = async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch('/api/games');
+      const d = await res.json();
+      const list = d.data || [];
+      setGames(list);
+      // 如果当前选中的游戏被删了，切到第一个
+      if (list.length > 0 && !list.find((g: Game) => g.id === rankGame)) {
+        setRankGame(list[0].id);
+      }
+    } catch {}
+    setRefreshing(false);
+  };
 
   useEffect(() => {
-    fetch('/api/games')
-      .then((r) => r.json())
-      .then((d) => {
-        const list = d.data || [];
-        setGames(list);
-        if (list.length > 0) setRankGame(list[0].id);
-      })
-      .catch(() => {});
+    loadGames();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -54,13 +64,23 @@ export default function GamesPage() {
 
   return (
     <div className="fade-up max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-          小游戏
-        </h1>
-        <p className="text-sm text-gray-500 mt-2">
-          选择游戏开始挑战，冲击排行榜。
-        </p>
+            <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            小游戏
+          </h1>
+          <p className="text-sm text-gray-500 mt-2">
+            选择游戏开始挑战，冲击排行榜。
+          </p>
+        </div>
+        <button
+          onClick={loadGames}
+          disabled={refreshing}
+          className="shrink-0 px-4 py-2 rounded-xl text-sm font-medium bg-white/70 dark:bg-white/10 border border-white/40 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/20 transition disabled:opacity-50 flex items-center gap-2"
+        >
+          <span className={refreshing ? 'inline-block animate-spin' : ''}>🔄</span>
+          <span className="hidden sm:inline">{refreshing ? '刷新中…' : '刷新'}</span>
+        </button>
       </div>
 
       {/* 游戏卡片网格 - 动态渲染 */}

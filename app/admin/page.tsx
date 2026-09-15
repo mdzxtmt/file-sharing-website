@@ -457,7 +457,15 @@ export default function AdminPage() {
           </div>
 
           <div className="glass-card p-5 sm:p-6">
-            <h2 className="text-base font-bold mb-4">现有游戏（{games.length}）</h2>
+            <div className="flex items-center justify-between mb-4">
+  <h2 className="text-base font-bold">现有游戏（{games.length}）</h2>
+  <button
+    onClick={() => loadGames(password)}
+    className="text-xs px-3 py-1.5 rounded-lg bg-white/70 dark:bg-white/10 hover:bg-white/90 transition"
+  >
+    🔄 刷新
+  </button>
+</div>
             {games.length === 0 ? (
               <div className="text-center py-10 text-gray-400 text-sm">还没有游戏</div>
             ) : (
