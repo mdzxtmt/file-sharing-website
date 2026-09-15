@@ -38,6 +38,7 @@ async function isValidCookie(cookieValue: string | undefined): Promise<boolean> 
 }
 
 export async function middleware(request: NextRequest) {
+     return NextResponse.next();
   const { pathname } = request.nextUrl;
 
   // 放行清单
