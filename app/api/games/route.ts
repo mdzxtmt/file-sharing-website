@@ -9,11 +9,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// GET：获取活跃游戏列表（公开）
 export async function GET() {
   try {
     const { data, error } = await supabase
       .from('games')
-      .select('id, name, icon, description, sort_order')
+      .select('id, name, icon, description, path, tag, gradient, color, sort_order, is_active')
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
