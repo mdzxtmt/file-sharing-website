@@ -1,4 +1,5 @@
 import './globals.css';
+import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import type { Metadata, Viewport } from 'next';
 import Navbar from '@/components/layout/Navbar';
 
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <body>
         <Navbar />
+        <AnnouncementBar />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       </body>
     </html>
