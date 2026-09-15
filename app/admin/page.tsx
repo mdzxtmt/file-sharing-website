@@ -21,6 +21,7 @@ type Game = {
   color: string;
   sort_order: number;
   is_active: boolean;
+  has_score: boolean;
 };
 
 export default function AdminPage() {
@@ -41,7 +42,7 @@ export default function AdminPage() {
   const defaultForm = {
     id: '', name: '', icon: '🎮', description: '', tag: '',
     gradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-    color: '#6366f1', sort_order: 99, is_active: true,
+    color: '#6366f1', has_score: true, sort_order: 99, is_active: true,
   };
   const [gForm, setGForm] = useState(defaultForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -433,6 +434,22 @@ export default function AdminPage() {
                   className="w-full px-3 py-2.5 rounded-xl bg-white/70 dark:bg-white/10 outline-none text-sm border border-white/40 dark:border-white/10 focus:border-indigo-400 transition font-mono text-xs"
                 />
                 <div className="mt-2 h-10 rounded-lg" style={{ background: gForm.gradient }} />
+                              <div className="sm:col-span-2">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gForm.has_score}
+                    onChange={(e) => setGForm({ ...gForm, has_score: e.target.checked })}
+                    className="w-5 h-5 rounded accent-indigo-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">参与排行榜</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      （不勾选则不在排行榜/用户中心显示）
+                    </span>
+                  </div>
+                </label>
+              </div>
               </div>
             </div>
 

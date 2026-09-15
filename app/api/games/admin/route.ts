@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       password, id, name, icon, description, path,
-      tag, gradient, color, sort_order, is_active,
+      tag, gradient, color, has_score, sort_order, is_active,
     } = body;
 
     if (!checkPwd(password)) {
@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       tag: (tag || '').slice(0, 20),
       gradient: (gradient || 'linear-gradient(135deg,#6366f1,#8b5cf6)').slice(0, 200),
       color: (color || '#6366f1').slice(0, 20),
+      has_score: has_score !== false,
       sort_order: Number(sort_order) || 99,
       is_active: is_active !== false,
     };

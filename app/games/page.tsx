@@ -157,7 +157,7 @@ export default function GamesPage() {
 
         {games.length > 0 && (
           <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-            {games.map((g) => (
+            {games.filter((g) => g.has_score !== false).map((g) => (
               <button
                 key={g.id}
                 onClick={() => setRankGame(g.id)}
