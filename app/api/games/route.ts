@@ -10,13 +10,11 @@ const supabase = createClient(
 );
 
 // GET：获取活跃游戏列表（公开）
-export async function GET() {
-  try {
     export async function GET() {
   try {
-    const { data, error } = await supabase
+      const { data, error } = await supabase
       .from('games')
-      .select('id, name, icon, description, path, tag, gradient, color, has_score, sort_order, is_active')
+      .select('id, name, icon, description, path, tag, gradient, color, sort_order, is_active')
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
