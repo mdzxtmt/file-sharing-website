@@ -53,7 +53,7 @@ export default function VoicePage() {
         GPT-SoVITS 语音合成
       </h1>
       <p className="text-sm text-gray-500 mb-6">
-        输入文字，选择语言，一键生成逼真语音。
+        请输入文本。选择语言是假的
       </p>
 
       <div className="glass-card p-4 sm:p-5 flex flex-col gap-4">
