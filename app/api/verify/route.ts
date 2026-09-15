@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const COOKIE_NAME = 'site_verified';
+const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 小时
+
+function signCookie(expiryMs: number): string {
+  const secret = process.env.COOKIE_SECRET || '';
+  const data = `v1:${expiryMs}`;
+  const sig = crypto
+    .createHmac('sha256', secret)
+    .update(data)
+    .digest('hex');
+  return `${data}:${sig}`;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,12 +44,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '人机验证失败' }, { status: 403 });
     }
 
+    const expiry = Date.now() + COOKIE_MAX_AGE * 1000;
+    const cookieValue = signCookie(expiry);
+
     const response = NextResponse.json({ success: true });
-    response.cookies.set('site_verified', 'ok', {
+    response.cookies.set(COOKIE_NAME, cookieValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 小时
+      maxAge: COOKIE_MAX_AGE,
       path: '/',
     });
 

@@ -1,9 +1,51 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+const COOKIE_NAME = 'site_verified';
+
+// 用 Web Crypto 计算 HMAC-SHA256（Edge Runtime 只支持这个）
+async function computeSig(data: string, secret: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(data));
+  return Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function isValidCookie(cookieValue: string | undefined, secret: string): Promise<boolean> {
+  if (!cookieValue || !secret) return false;
+
+  const parts = cookieValue.split(':');
+  if (parts.length !== 3) return false;
+
+  const [version, expiryStr, sig] = parts;
+  if (version !== 'v1') return false;
+
+  const expiry = Number(expiryStr);
+  if (isNaN(expiry) || Date.now() > expiry) return false;
+
+  const expected = await computeSig(`v1:${expiryStr}`, secret);
+
+  // 定长字符串比较
+  if (sig.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < sig.length; i++) {
+    diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 放行清单
   if (pathname === '/verify' || pathname === '/api/verify') {
     return NextResponse.next();
   }
@@ -21,8 +63,11 @@ export function middleware(request: NextRequest) {
   }
 
   // 检查 Cookie
-  const cookie = request.cookies.get('site_verified')?.value;
-  if (cookie === 'ok') {
+  const cookie = request.cookies.get(COOKIE_NAME)?.value;
+  const secret = process.env.COOKIE_SECRET || '';
+  const valid = await isValidCookie(cookie, secret);
+
+  if (valid) {
     return NextResponse.next();
   }
 
