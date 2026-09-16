@@ -17,9 +17,17 @@ const supabase = createClient(
 
 // 签到奖励规则
 function getReward(streak: number): number {
-  const base = 10;
-  const bonus = Math.min(streak, 10) * 2; // 连续天数加成，最多 +20
-  return base + bonus;
+  // 基础奖励：随机 8 ~ 18
+  const base = 8 + Math.floor(Math.random() * 11);
+
+  // 连续签到加成：每多一天 1~3 分随机，最多 10 天
+  const streakBonus = Math.min(streak, 10) * (1 + Math.floor(Math.random() * 3));
+
+  // 10% 概率触发"暴击"，翻倍
+  const isCritical = Math.random() < 0.1;
+  const total = base + streakBonus;
+
+  return isCritical ? total * 2 : total;
 }
 
 export async function POST(req: NextRequest) {
