@@ -1,5 +1,6 @@
 'use client';
 
+import { formatAnnouncement } from '@/lib/formatAnnouncement';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -141,7 +142,7 @@ export default function AnnouncementBar() {
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <span className="font-semibold text-sm">{item.title}</span>
             <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
-              {item.content}
+              {item.content.replace(/[*`\[\]]/g, '').replace(/\(https?:\/\/[^)]+\)/g, '')}
             </span>
           </div>
         </Link>

@@ -272,12 +272,12 @@ export default function AdminPage() {
                 maxLength={100}
                 className="w-full px-4 py-3 rounded-xl bg-white/70 dark:bg-white/10 outline-none text-sm border border-white/40 dark:border-white/10 focus:border-indigo-400 transition"
               />
-              <textarea
+                <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="公告内容（最多 500 字）"
-                maxLength={500}
-                rows={4}
+                placeholder="公告内容（支持 **加粗**、*斜体*、[文字](链接)、换行）"
+                maxLength={2000}
+                rows={6}
                 className="w-full px-4 py-3 rounded-xl bg-white/70 dark:bg-white/10 outline-none text-sm border border-white/40 dark:border-white/10 focus:border-indigo-400 transition resize-y"
               />
               <div className="flex flex-wrap gap-3 items-center">

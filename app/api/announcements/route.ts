@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       .from('announcements')
       .insert([{
         title: title.trim().slice(0, 100),
-        content: content.trim().slice(0, 500),
+        content: content.trim().slice(0, 2000),
         type: type || 'info',
       }])
       .select()

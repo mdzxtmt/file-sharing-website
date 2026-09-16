@@ -1,5 +1,6 @@
 'use client';
 
+import { formatAnnouncement } from '@/lib/formatAnnouncement';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -112,9 +113,9 @@ export default function AnnouncementsPage() {
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-                  {item.content}
-                </p>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  {formatAnnouncement(item.content)}
+                </div>
               </div>
             );
           })}
