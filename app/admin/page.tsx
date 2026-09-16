@@ -47,9 +47,9 @@ export default function AdminPage() {
   const [gForm, setGForm] = useState(defaultForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  async function loadAnnouncements() {
+    async function loadAnnouncements() {
     try {
-      const res = await fetch('/api/announcements');
+      const res = await fetch(`/api/announcements?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       setAnnItems(data.data || []);
     } catch {}
@@ -57,7 +57,7 @@ export default function AdminPage() {
 
   async function loadGames(pwd: string) {
     try {
-      const res = await fetch(`/api/games/admin?password=${encodeURIComponent(pwd)}`);
+      const res = await fetch(`/api/games/admin?password=${encodeURIComponent(pwd)}&t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       setGames(data.data || []);
     } catch {}
