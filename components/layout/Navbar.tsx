@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { href: '/', label: '首页', icon: '🏠' },
   { href: '/voice', label: '语音', icon: '🎙️' },
   { href: '/games', label: '游戏', icon: '🎮' },
-  { href: '/points', label: '积分', icon: '' },
+  { href: '/points', label: '积分', icon: '🪙' },
   { href: '/user', label: '我的', icon: '👤' },
 ];
 
