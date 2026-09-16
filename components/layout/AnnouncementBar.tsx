@@ -29,45 +29,104 @@ const TYPE_STYLES: Record<string, { bg: string; border: string; icon: string }> 
   },
 };
 
+const READ_KEY = 'ann_read_ids';
+
 export default function AnnouncementBar() {
   const [items, setItems] = useState<Announcement[]>([]);
+  const [readIds, setReadIds] = useState<string[]>([]);
   const [current, setCurrent] = useState(0);
-  const [hidden, setHidden] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
+  // 加载公告 + 读取已读记录
   useEffect(() => {
-    const hiddenUntil = localStorage.getItem('ann_hidden_until');
-    if (hiddenUntil && Number(hiddenUntil) > Date.now()) {
-      setHidden(true);
-      return;
-    }
-    fetch(`/api/announcements?t=${Date.now()}`, { cache: 'no-store' })
+    try {
+      const saved = localStorage.getItem(READ_KEY);
+      if (saved) setReadIds(JSON.parse(saved));
+    } catch {}
+
+    fetch(`/api/announcements?all=1&t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setItems(d.data || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
-  // 多条公告自动轮播
+  // 未读公告 = 所有公告 - 已读 ID
+  const unread = items.filter((it) => !readIds.includes(it.id));
+
+  // 轮播：只在有未读时
   useEffect(() => {
-    if (items.length <= 1) return;
+    if (unread.length <= 1) return;
     const t = setInterval(() => {
-      setCurrent((c) => (c + 1) % items.length);
+      setCurrent((c) => (c + 1) % unread.length);
     }, 6000);
     return () => clearInterval(t);
-  }, [items.length]);
+  }, [unread.length]);
 
-  function handleClose() {
-    setHidden(true);
-    localStorage.setItem('ann_hidden_until', String(Date.now() + 24 * 60 * 60 * 1000));
+  // 当前显示的那条
+  useEffect(() => {
+    if (current >= unread.length) setCurrent(0);
+  }, [unread.length, current]);
+
+  function handleAcknowledge() {
+    // 把当前所有未读公告标记为已读
+    const newReadIds = [...readIds, ...unread.map((it) => it.id)];
+    setReadIds(newReadIds);
+    try {
+      localStorage.setItem(READ_KEY, JSON.stringify(newReadIds));
+    } catch {}
   }
 
-  if (hidden || items.length === 0) return null;
+  // 加载中不显示（避免闪烁）
+  if (!loaded) return null;
 
-  const item = items[current];
+  // ===== 没有公告数据 =====
+  if (items.length === 0) {
+    return (
+      <div className="w-full border-b px-4 sm:px-6 py-2.5 bg-white/40 dark:bg-white/5 border-white/40 dark:border-white/10">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <span className="text-lg shrink-0">📭</span>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-gray-500">暂无公告</span>
+          </div>
+          <Link
+            href="/announcements"
+            className="shrink-0 text-xs text-indigo-500 hover:underline"
+          >
+            查看全部 →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 全部已读 =====
+  if (unread.length === 0) {
+    return (
+      <div className="w-full border-b px-4 sm:px-6 py-2.5 bg-white/40 dark:bg-white/5 border-white/40 dark:border-white/10">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <span className="text-lg shrink-0">✅</span>
+          <div className="flex-1 min-w-0">
+            <span className="text-xs text-gray-500">没有新公告</span>
+          </div>
+          <Link
+            href="/announcements"
+            className="shrink-0 text-xs text-indigo-500 hover:underline"
+          >
+            查看全部 →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ===== 有未读公告 =====
+  const item = unread[current];
   const style = TYPE_STYLES[item.type] || TYPE_STYLES.info;
 
   return (
     <div
-      className="relative w-full border-b px-4 sm:px-6 py-2.5 fade-up"
+      className="w-full border-b px-4 sm:px-6 py-2.5 fade-up transition-all"
       style={{ background: style.bg, borderColor: style.border }}
     >
       <div className="max-w-7xl mx-auto flex items-center gap-3">
@@ -88,9 +147,9 @@ export default function AnnouncementBar() {
         </Link>
 
         {/* 多条时显示圆点 */}
-        {items.length > 1 && (
+        {unread.length > 1 && (
           <div className="hidden sm:flex gap-1 shrink-0">
-            {items.map((_, i) => (
+            {unread.map((_, i) => (
               <button
                 key={i}
                 onClick={(e) => {
@@ -116,7 +175,7 @@ export default function AnnouncementBar() {
 
         {/* 我知道了 */}
         <button
-          onClick={handleClose}
+          onClick={handleAcknowledge}
           className="shrink-0 px-3 py-1 rounded-lg text-xs font-medium bg-white/60 dark:bg-white/10 border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/20 transition whitespace-nowrap"
         >
           我知道了
