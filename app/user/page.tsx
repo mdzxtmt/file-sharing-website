@@ -107,10 +107,22 @@ export default function UserPage() {
       .finally(() => setLoading(false));
   }, [game, nickname, saved]);
 
-  function handleSave() {
+    async function handleSave() {
     const name = nickname.trim().slice(0, 20) || '匿名玩家';
     localStorage.setItem('player_name', name);
     setNickname(name);
+
+    // 立即同步到 user_points 表
+    try {
+      const id = getDeviceId();
+      if (id) {
+        await fetch(
+          `/api/points?device_id=${id}&player_name=${encodeURIComponent(name)}&t=${Date.now()}`,
+          { cache: 'no-store' }
+        );
+      }
+    } catch {}
+
     setSaved((s) => !s);
     setTimeout(() => setSaved(false), 1500);
   }
