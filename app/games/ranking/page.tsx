@@ -7,7 +7,7 @@ type Game = {
   id: string;
   name: string;
   icon: string;
-  description: string;
+  has_score: boolean;
 };
 
 type ScoreItem = {
@@ -27,12 +27,12 @@ export default function RankingPage() {
   const [scores, setScores] = useState<ScoreItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 加载游戏列表
+  // 加载游戏列表（只保留有计分的）
   useEffect(() => {
-    fetch('/api/games?t=' + Date.now(), { cache: 'no-store' })
+    fetch(`/api/games?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => {
-        const list = d.data || [];
+        const list: Game[] = (d.data || []).filter((g: Game) => g.has_score !== false);
         setGames(list);
         if (list.length > 0) setGame(list[0].id);
       })
@@ -90,7 +90,7 @@ export default function RankingPage() {
 
       {/* 游戏 Tab */}
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
-        {games.filter((g) => g.has_score !== false).map((g) => (
+        {games.map((g) => (
           <button
             key={g.id}
             onClick={() => setGame(g.id)}
@@ -121,7 +121,7 @@ export default function RankingPage() {
             <p>还没有成绩记录</p>
             <p className="text-xs mt-2">快去挑战第一个成绩吧！</p>
             <Link
-              href={game === '2048' ? '/games/2048' : '/games/arena'}
+              href={gameInfo ? `/games/${gameInfo.id}` : '/games'}
               className="btn-gradient inline-block mt-6 px-6 py-2.5 text-sm"
             >
               开始游戏
@@ -166,7 +166,7 @@ export default function RankingPage() {
                         {s.player_name}
                       </div>
                       <div className="sm:hidden text-[11px] text-gray-500 mt-0.5 flex flex-wrap gap-2">
-                        {game === '2048' ? (
+                        {maxTile ? (
                           <span>最大 {maxTile}</span>
                         ) : (
                           <span>第 {s.wave} 波 · 击杀 {s.kills}</span>
@@ -185,7 +185,7 @@ export default function RankingPage() {
                     </div>
 
                     <div className="hidden sm:block text-right text-sm text-gray-600 dark:text-gray-300 tabular-nums">
-                      {game === '2048' ? maxTile : s.wave}
+                      {maxTile ? maxTile : s.wave}
                     </div>
 
                     <div className="hidden sm:block text-right text-xs text-gray-400 tabular-nums">
