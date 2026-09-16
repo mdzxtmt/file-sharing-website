@@ -15,8 +15,8 @@ const supabase = createClient(
   }
 );
 
-// 签到奖励规则
-function getReward(streak: number): number {
+// 签到奖励规则：随机积分
+function getReward(streak: number): { reward: number; critical: boolean } {
   // 基础奖励：随机 8 ~ 18
   const base = 8 + Math.floor(Math.random() * 11);
 
@@ -27,7 +27,10 @@ function getReward(streak: number): number {
   const isCritical = Math.random() < 0.1;
   const total = base + streakBonus;
 
-  return isCritical ? total * 2 : total;
+  return {
+    reward: isCritical ? total * 2 : total,
+    critical: isCritical,
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -86,7 +89,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const reward = getReward(newStreak);
+    // 计算奖励
+    const { reward, critical } = getReward(newStreak);
     const newPoints = user.points + reward;
 
     // 更新
@@ -107,13 +111,16 @@ export async function POST(req: NextRequest) {
     await supabase.from('point_logs').insert([{
       device_id,
       amount: reward,
-      reason: `每日签到（连续 ${newStreak} 天）`,
+      reason: critical
+        ? `每日签到暴击（连续 ${newStreak} 天）`
+        : `每日签到（连续 ${newStreak} 天）`,
     }]);
 
     return NextResponse.json({
       success: true,
       data: {
         reward,
+        critical,
         points: newPoints,
         checkin_streak: newStreak,
       },
