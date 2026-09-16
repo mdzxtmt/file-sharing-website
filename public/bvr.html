@@ -39,6 +39,46 @@
             overscroll-behavior: none;
             touch-action: none;
         }
+                /* ===== 返回按钮 ===== */
+        #back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+            padding: 8px 16px;
+            color: #0f0;
+            font-size: 14px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            background: rgba(0, 20, 0, 0.75);
+            border: 1px solid #0f0;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            touch-action: manipulation;
+        }
+
+        #back-btn:hover {
+            background: rgba(0, 255, 0, 0.25);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        }
+
+        /* 移动端：避开顶部按钮栏 */
+        @media (hover: none) and (pointer: coarse),
+        (max-width: 900px) {
+            #back-btn {
+                top: max(76px, calc(env(safe-area-inset-top) + 64px));
+                right: max(12px, env(safe-area-inset-right));
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
 
         #canvas-container {
             position: absolute;
@@ -907,7 +947,7 @@
 </head>
 
 <body>
-
+    <a id="back-btn" href="/games">← 返回</a>
     <div id="canvas-container"></div>
 
     <div id="hud">
