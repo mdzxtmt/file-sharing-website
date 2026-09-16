@@ -66,6 +66,44 @@
             transform: scale(1.05);
             box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
         }
+                /* ===== 返回按钮 ===== */
+        #back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 8px 14px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: bold;
+            background: rgba(10, 10, 10, 0.7);
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            text-decoration: none;
+            font-family: inherit;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        #back-btn:hover {
+            background: rgba(60, 60, 60, 0.8);
+        }
+
+        /* 原按钮右移，给返回按钮让位 */
+        #settings-btn { left: 100px !important; }
+        #kill-counter { left: 170px !important; }
+
+        /* 移动端适配 */
+        @media (max-width: 900px) and (orientation: landscape) {
+            #back-btn { top: 12px; left: 12px; padding: 5px 10px; font-size: 12px; }
+            #settings-btn { left: 80px !important; top: 12px !important; }
+            #kill-counter { left: 140px !important; top: 12px !important; }
+        }
 
         /* 击毁统计计数器 - 位于设置按钮右侧 */
         #kill-counter {
@@ -699,6 +737,7 @@
     </style>
 </head>
 <body>
+  <a id="back-btn" href="/games">← 返回</a>
     <canvas id="game-canvas"></canvas>
     
     <div id="ui-layer">
