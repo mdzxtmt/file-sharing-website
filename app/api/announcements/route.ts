@@ -15,18 +15,32 @@ const supabase = createClient(
   }
 );
 
-// GET：获取活跃公告
-export async function GET() {
+// GET：获取公告
+// ?all=1 → 返回全部（给列表页用）
+// 默认 → 返回最新 5 条（给公告栏用）
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const all = searchParams.get('all') === '1';
+    const limit = all ? 200 : 5;
+
     const { data, error } = await supabase
       .from('announcements')
       .select('id, title, content, type, created_at')
       .eq('is_active', true)
       .order('created_at', { ascending: false })
-      .limit(5);
+      .limit(limit);
 
     if (error) throw error;
-    return NextResponse.json({ data: data || [] });
+
+    return NextResponse.json(
+      { data: data || [] },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
+      }
+    );
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

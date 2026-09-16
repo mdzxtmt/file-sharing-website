@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 type Announcement = {
   id: string;
@@ -31,20 +32,21 @@ const TYPE_STYLES: Record<string, { bg: string; border: string; icon: string }> 
 export default function AnnouncementBar() {
   const [items, setItems] = useState<Announcement[]>([]);
   const [current, setCurrent] = useState(0);
-  const [closed, setClosed] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     const hiddenUntil = localStorage.getItem('ann_hidden_until');
     if (hiddenUntil && Number(hiddenUntil) > Date.now()) {
-      setClosed(true);
+      setHidden(true);
       return;
     }
-    fetch('/api/announcements')
+    fetch(`/api/announcements?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => setItems(d.data || []))
       .catch(() => {});
   }, []);
 
+  // 多条公告自动轮播
   useEffect(() => {
     if (items.length <= 1) return;
     const t = setInterval(() => {
@@ -54,11 +56,11 @@ export default function AnnouncementBar() {
   }, [items.length]);
 
   function handleClose() {
-    setClosed(true);
+    setHidden(true);
     localStorage.setItem('ann_hidden_until', String(Date.now() + 24 * 60 * 60 * 1000));
   }
 
-  if (closed || items.length === 0) return null;
+  if (hidden || items.length === 0) return null;
 
   const item = items[current];
   const style = TYPE_STYLES[item.type] || TYPE_STYLES.info;
@@ -69,23 +71,32 @@ export default function AnnouncementBar() {
       style={{ background: style.bg, borderColor: style.border }}
     >
       <div className="max-w-7xl mx-auto flex items-center gap-3">
+        {/* 图标 */}
         <span className="text-lg shrink-0">{style.icon}</span>
 
-        <div className="flex-1 min-w-0">
+        {/* 公告内容（点击进入列表页） */}
+        <Link
+          href="/announcements"
+          className="flex-1 min-w-0 hover:opacity-75 transition"
+        >
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <span className="font-semibold text-sm">{item.title}</span>
             <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
               {item.content}
             </span>
           </div>
-        </div>
+        </Link>
 
+        {/* 多条时显示圆点 */}
         {items.length > 1 && (
           <div className="hidden sm:flex gap-1 shrink-0">
             {items.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrent(i)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrent(i);
+                }}
                 className={`w-1.5 h-1.5 rounded-full transition ${
                   i === current ? 'bg-indigo-500' : 'bg-gray-400/40'
                 }`}
@@ -95,12 +106,20 @@ export default function AnnouncementBar() {
           </div>
         )}
 
+        {/* 查看全部 */}
+        <Link
+          href="/announcements"
+          className="hidden sm:inline-block shrink-0 text-xs text-indigo-500 hover:underline"
+        >
+          查看全部 →
+        </Link>
+
+        {/* 我知道了 */}
         <button
           onClick={handleClose}
-          className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:bg-white/50 dark:hover:bg-white/10 transition text-lg leading-none"
-          aria-label="关闭公告"
+          className="shrink-0 px-3 py-1 rounded-lg text-xs font-medium bg-white/60 dark:bg-white/10 border border-white/50 dark:border-white/10 hover:bg-white/90 dark:hover:bg-white/20 transition whitespace-nowrap"
         >
-          ×
+          我知道了
         </button>
       </div>
     </div>
