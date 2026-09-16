@@ -6,8 +6,14 @@ export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    global: {
+      fetch: (url: any, options: any) =>
+        fetch(url, { ...options, cache: 'no-store' }),
+    },
+  }
+);;
 
 // GET：获取活跃游戏列表（公开）
  export async function GET() {
