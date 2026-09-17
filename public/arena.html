@@ -1974,16 +1974,12 @@ function switchCategory(category) {
   if (state !== 'playing') return;
   const list = WEAPON_CATEGORIES[category];
   if (!list || list.length === 0) return;
-  const selected = selectedWeapons[category];
-  if (selected && list.includes(selected)) {
-    if (curWeapon !== selected) {
-      switchWeapon(selected);
-      return;
-    }
+
+  // 直接切到该类别选中的武器
+  const selected = selectedWeapons[category] || list[0];
+  if (curWeapon !== selected) {
+    switchWeapon(selected);
   }
-  const idx = list.indexOf(curWeapon);
-  const nextKey = idx >= 0 ? list[(idx + 1) % list.length] : list[0];
-  switchWeapon(nextKey);
 }
 
 function setAiming(on) {
