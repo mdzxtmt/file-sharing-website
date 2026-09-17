@@ -92,7 +92,8 @@ export default function GamesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-10">
           {games.map((g) => (
-            <Link key={g.id} href={g.path || `/games/${g.id}`} className="block group">
+                      <div key={g.id} className="relative">
+            <Link href={g.path || `/games/${g.id}`} className="block group">
               <div className="glass-card overflow-hidden relative h-full">
                 <div
                   className="absolute inset-0 opacity-90"
@@ -113,9 +114,7 @@ export default function GamesPage() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-lg sm:text-xl font-bold mb-1">
-                      {g.name}
-                    </h2>
+                    <h2 className="text-lg sm:text-xl font-bold mb-1">{g.name}</h2>
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
                       {g.description}
                     </p>
@@ -132,9 +131,15 @@ export default function GamesPage() {
                 </div>
               </div>
             </Link>
-          ))}
-        </div>
-      )}
+            {/* 评论入口 */}
+            <Link
+              href={`/games/${g.id}/comments`}
+              className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-black/40 backdrop-blur text-white hover:bg-black/60 transition z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              💬 评论
+            </Link>
+          </div>
 
       {/* 排行榜预览 */}
       <div className="glass-card p-5 sm:p-6">
