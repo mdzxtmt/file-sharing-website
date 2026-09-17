@@ -118,17 +118,14 @@ export default function ProfilePage() {
           }}
         />
         <div className="relative flex items-start gap-5 flex-wrap">
-          {/* 头像 */}
-          <div className="relative">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center text-5xl sm:text-6xl bg-white/70 dark:bg-white/10 border border-white/40 dark:border-white/10 shadow-lg">
-              {u.avatar}
-            </div>
-            {online && (
-              <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-500 text-white shadow">
-                在线
+          {/* 在线状态 */}
+          {online && (
+            <div className="shrink-0">
+              <span className="inline-block px-3 py-1.5 rounded-full text-xs font-bold bg-green-500 text-white shadow">
+                ● 在线
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* 信息 */}
           <div className="flex-1 min-w-0">

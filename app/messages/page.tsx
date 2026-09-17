@@ -28,7 +28,6 @@ export default function MessagesPage() {
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [myDeviceId, setMyDeviceId] = useState('');
-  const [myAvatar, setMyAvatar] = useState('😀');
   const [myName, setMyName] = useState('匿名玩家');
 
   async function loadMessages() {
@@ -43,7 +42,6 @@ export default function MessagesPage() {
     const id = getDeviceId();
     setMyDeviceId(id);
     setMyName(localStorage.getItem('player_name') || '匿名玩家');
-    setMyAvatar(localStorage.getItem('player_avatar') || '😀');
 
     loadMessages().finally(() => setLoading(false));
   }, []);
@@ -63,7 +61,6 @@ export default function MessagesPage() {
         body: JSON.stringify({
           device_id: myDeviceId,
           player_name: myName,
-          avatar: myAvatar,
           content,
         }),
       });
@@ -106,7 +103,6 @@ export default function MessagesPage() {
       {/* 发布框 */}
       <div className="glass-card p-4 sm:p-5 mb-6">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl">{myAvatar}</span>
           <span className="text-sm font-semibold">{myName}</span>
         </div>
         <textarea
@@ -146,7 +142,6 @@ export default function MessagesPage() {
           {messages.map((m) => (
             <div key={m.id} className="glass-card p-4 fade-up">
               <div className="flex items-start gap-3">
-                <span className="text-2xl shrink-0">{m.avatar}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2 flex-wrap mb-1">
                     <Link

@@ -609,7 +609,6 @@ export default function AdminPage() {
               <div className="space-y-2">
                 {users.map((u) => (
                   <div key={u.device_id} className="flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-white/5 border border-white/40 dark:border-white/10">
-                    <span className="text-2xl shrink-0">{u.avatar}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="font-semibold text-sm truncate">{u.player_name}</span>
@@ -779,12 +778,9 @@ export default function AdminPage() {
             className="glass-card p-6 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl">{editingUser.avatar}</span>
-              <div>
-                <div className="font-bold">{editingUser.player_name}</div>
-                <div className="text-[11px] text-gray-400 font-mono">{editingUser.device_id}</div>
-              </div>
+            <div className="mb-4">
+              <div className="font-bold">{editingUser.player_name}</div>
+              <div className="text-[11px] text-gray-400 font-mono">{editingUser.device_id}</div>
             </div>
 
             {/* 改昵称 */}

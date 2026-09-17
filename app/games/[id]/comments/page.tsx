@@ -78,7 +78,6 @@ export default function CommentsPage() {
           game_key: gameId,
           device_id: id,
           player_name: localStorage.getItem('player_name') || '匿名玩家',
-          avatar: localStorage.getItem('player_avatar') || '😀',
           content,
           rating,
         }),
@@ -108,7 +107,7 @@ export default function CommentsPage() {
     } catch { return ''; }
   }
 
-  const myAvatar = typeof window !== 'undefined' ? (localStorage.getItem('player_avatar') || '😀') : '😀';
+  
   const myName = typeof window !== 'undefined' ? (localStorage.getItem('player_name') || '匿名玩家') : '匿名玩家';
 
   return (
@@ -144,7 +143,6 @@ export default function CommentsPage() {
       {/* 发布评论 */}
       <div className="glass-card p-4 sm:p-5 mb-6">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-2xl">{myAvatar}</span>
           <span className="text-sm font-semibold">{myName}</span>
         </div>
 
@@ -190,7 +188,6 @@ export default function CommentsPage() {
           {comments.map((c) => (
             <div key={c.id} className="glass-card p-4 fade-up">
               <div className="flex items-start gap-3">
-                <span className="text-2xl shrink-0">{c.avatar}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <Link

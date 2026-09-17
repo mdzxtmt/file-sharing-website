@@ -42,7 +42,6 @@ function getDeviceId(): string {
 
 export default function UserPage() {
   const [nickname, setNickname] = useState('');
-  const [avatar, setAvatar] = useState('😀');
   const [saved, setSaved] = useState(false);
   const [games, setGames] = useState<Game[]>([]);
   const [game, setGame] = useState('');
@@ -57,7 +56,6 @@ export default function UserPage() {
   useEffect(() => {
     const name = localStorage.getItem('player_name') || '';
     setNickname(name);
-    setAvatar(localStorage.getItem('player_avatar') || '😀');
   }, []);
 
   // 加载积分
@@ -66,7 +64,7 @@ export default function UserPage() {
     if (!id) return;
     try {
       const res = await fetch(
-        `/api/points?device_id=${id}&player_name=${encodeURIComponent(nickname || '匿名玩家')}&avatar=${encodeURIComponent(avatar)}&t=${Date.now()}`,
+        `/api/points?device_id=${id}&player_name=${encodeURIComponent(nickname || '匿名玩家')}&t=${Date.now()}`,
         { cache: 'no-store' }
       );
       const d = await res.json();
@@ -119,7 +117,7 @@ export default function UserPage() {
       const id = getDeviceId();
       if (id) {
         await fetch(
-          `/api/points?device_id=${id}&player_name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}&t=${Date.now()}`,
+          `/api/points?device_id=${id}&player_name=${encodeURIComponent(name)}&t=${Date.now()}`,
           { cache: 'no-store' }
         );
       }
@@ -249,25 +247,6 @@ export default function UserPage() {
           连续签到越多，奖励越高（最多 +20 加成）
         </p>
       </div>
-              {/* 头像 */}
-        <div className="mb-4">
-          <label className="text-xs text-gray-500 mb-2 block">选择头像</label>
-          <div className="flex flex-wrap gap-2">
-            {['😀','😎','🤖','👻','🐱','🐶','🦊','🐼','🐸','🦁','🐵','🐧','🦄','🐲','👽','🤡','💀','🎃','🌟','⚡','🔥','💎','🎮','🎧'].map(e => (
-              <button
-                key={e}
-                onClick={() => setAvatar(e)}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition ${
-                  avatar === e
-                    ? 'bg-indigo-500/20 ring-2 ring-indigo-500 scale-110'
-                    : 'bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20'
-                }`}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
 
       {/* ===== 昵称设置 ===== */}
       <div className="glass-card p-5 sm:p-6 mb-6">
