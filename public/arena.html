@@ -528,7 +528,7 @@ const BASE_WEAPONS = {
     magSize: 1, reloadTime: 999,
     spreadBase: 0, spreadAdd: 0,
     recoilPitch: 0.008, recoilKick: 0.35,
-    basePos: new THREE.Vector3(0.22, -0.20, -0.32),
+    basePos: new THREE.Vector3(0.22, -0.08, -0.32),
     adsPos:  new THREE.Vector3(0.22, -0.20, -0.32),
     adsFov: 78, adsSpreadMul: 1,
     scopeType: 'none', suppressor: false,
@@ -540,7 +540,7 @@ const BASE_WEAPONS = {
     magSize: 1, reloadTime: 999,
     spreadBase: 0, spreadAdd: 0,
     recoilPitch: 0.015, recoilKick: 0.6,
-    basePos: new THREE.Vector3(0.20, -0.20, -0.30),
+    basePos: new THREE.Vector3(0.20, -0.08, -0.30),
     adsPos:  new THREE.Vector3(0.20, -0.20, -0.30),
     adsFov: 78, adsSpreadMul: 1,
     scopeType: 'none', suppressor: false,
@@ -973,30 +973,134 @@ function buildPistolModel() {
 
 function buildButterflyModel() {
   const g = new THREE.Group();
-  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, roughness: 0.15, metalness: 0.95 });
+
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xd0d6de, roughness: 0.12, metalness: 0.95 });
   const handleMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.6, metalness: 0.4 });
-  const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x223344, emissiveIntensity: 0.3 });
-  const handleGeo = new THREE.BoxGeometry(0.03, 0.055, 0.16);
+  const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x334455, emissiveIntensity: 0.4 });
+
+  // 刀柄（两片）
+  const handleGeo = new THREE.BoxGeometry(0.045, 0.085, 0.24);
   const handleL = new THREE.Mesh(handleGeo, handleMat);
-  handleL.position.set(-0.018, -0.14, 0.02); g.add(handleL);
+  handleL.position.set(-0.028, -0.03, 0.08);
+  g.add(handleL);
+
   const handleR = new THREE.Mesh(handleGeo, handleMat);
-  handleR.position.set(0.018, -0.14, 0.02); g.add(handleR);
-  const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.04, 8).rotateZ(Math.PI / 2), edgeMat);
-  pivot.position.set(0, -0.12, -0.06); g.add(pivot);
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.03, 0.28), bladeMat);
-  blade.position.set(0, -0.10, -0.24); g.add(blade);
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.06, 6).rotateX(-Math.PI / 2), bladeMat);
-  tip.position.set(0, -0.10, -0.40); g.add(tip);
-  const edge = new THREE.Mesh(new THREE.BoxGeometry(0.002, 0.004, 0.30), edgeMat);
-  edge.position.set(0.005, -0.10, -0.24); g.add(edge);
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, 0.08), handleMat);
-  tail.position.set(0, -0.12, 0.10); g.add(tail);
+  handleR.position.set(0.028, -0.03, 0.08);
+  g.add(handleR);
+
+  // 手柄装饰凹槽
+  const grooveGeo = new THREE.BoxGeometry(0.005, 0.06, 0.18);
+  const grooveMat = new THREE.MeshStandardMaterial({ color: 0x0a0d11, roughness: 0.9 });
+  const grooveL = new THREE.Mesh(grooveGeo, grooveMat);
+  grooveL.position.set(-0.05, -0.03, 0.08);
+  g.add(grooveL);
+  const grooveR = new THREE.Mesh(grooveGeo, grooveMat);
+  grooveR.position.set(0.05, -0.03, 0.08);
+  g.add(grooveR);
+
+  // 枢轴
+  const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 8).rotateZ(Math.PI / 2), edgeMat);
+  pivot.position.set(0, 0.005, -0.06);
+  g.add(pivot);
+
+  // 主刀片（更长，向上位置）
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.05, 0.42), bladeMat);
+  blade.position.set(0, 0.02, -0.30);
+  g.add(blade);
+
+  // 刀尖
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.10, 6).rotateX(-Math.PI / 2), bladeMat);
+  tip.position.set(0, 0.02, -0.56);
+  g.add(tip);
+
+  // 刃口发光
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.006, 0.44), edgeMat);
+  edge.position.set(0.008, 0.02, -0.30);
+  g.add(edge);
+
+  // 尾部配重
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.06, 0.12), handleMat);
+  tail.position.set(0, -0.03, 0.20);
+  g.add(tail);
+
   const muzzleObj = new THREE.Object3D();
-  muzzleObj.position.set(0, -0.10, -0.45); g.add(muzzleObj);
+  muzzleObj.position.set(0, 0.02, -0.62);
+  g.add(muzzleObj);
+
   return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
 }
 
 function buildKarambitModel() {
+  const g = new THREE.Group();
+
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xc0c8d4, roughness: 0.12, metalness: 0.98 });
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1f2226, roughness: 0.55, metalness: 0.45 });
+  const ringMat = new THREE.MeshStandardMaterial({ color: 0x0d0f12, roughness: 0.4, metalness: 0.9 });
+
+  // 握把
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.20), handleMat);
+  handle.position.set(0, -0.02, 0.10);
+  g.add(handle);
+
+  // 握把防滑纹
+  for (let i = 0; i < 4; i++) {
+    const grip = new THREE.Mesh(
+      new THREE.BoxGeometry(0.052, 0.006, 0.015),
+      new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.95 })
+    );
+    grip.position.set(0, -0.02, 0.03 + i * 0.045);
+    g.add(grip);
+  }
+
+  // 指环（标志性）
+  const fingerRing = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.012, 10, 20), ringMat);
+  fingerRing.position.set(0, -0.02, 0.24);
+  fingerRing.rotation.y = Math.PI / 2;
+  g.add(fingerRing);
+
+  // 弧形刀身（爪刀标志）
+  const bladeSegments = [
+    { x: 0.0,   y: 0.05, z: -0.06, rot: 0.0,  len: 0.10 },
+    { x: 0.02,  y: 0.10, z: -0.14, rot: 0.35, len: 0.10 },
+    { x: 0.045, y: 0.15, z: -0.21, rot: 0.75, len: 0.10 },
+    { x: 0.055, y: 0.20, z: -0.27, rot: 1.15, len: 0.09 },
+  ];
+  bladeSegments.forEach((p, i) => {
+    const seg = new THREE.Mesh(
+      new THREE.BoxGeometry(0.012, 0.045 - i * 0.005, p.len),
+      bladeMat
+    );
+    seg.position.set(p.x, p.y, p.z);
+    seg.rotation.x = p.rot;
+    g.add(seg);
+  });
+
+  // 尖端
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.09, 6).rotateX(-Math.PI / 2), bladeMat);
+  tip.position.set(0.055, 0.26, -0.33);
+  tip.rotation.x = 1.7;
+  g.add(tip);
+
+  // 基部连接
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.08), handleMat);
+  base.position.set(0, 0.01, -0.04);
+  g.add(base);
+
+  // 刃口高光
+  const edgeGlow = new THREE.Mesh(
+    new THREE.BoxGeometry(0.003, 0.005, 0.30),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x334455, emissiveIntensity: 0.4 })
+  );
+  edgeGlow.position.set(0.03, 0.14, -0.20);
+  edgeGlow.rotation.x = 0.7;
+  g.add(edgeGlow);
+
+  const muzzleObj = new THREE.Object3D();
+  muzzleObj.position.set(0.055, 0.28, -0.36);
+  g.add(muzzleObj);
+
+  return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
+}
   const g = new THREE.Group();
   const bladeMat = new THREE.MeshStandardMaterial({ color: 0xb8c0cc, roughness: 0.12, metalness: 0.98 });
   const handleMat = new THREE.MeshStandardMaterial({ color: 0x1f2226, roughness: 0.55, metalness: 0.45 });
