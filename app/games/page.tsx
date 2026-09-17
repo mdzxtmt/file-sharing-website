@@ -12,6 +12,7 @@ type Game = {
   tag: string;
   gradient: string;
   color: string;
+  has_score: boolean;
 };
 
 type ScoreItem = {
@@ -27,7 +28,7 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [rankGame, setRankGame] = useState('');
   const [topScores, setTopScores] = useState<ScoreItem[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadGames = async () => {
@@ -37,9 +38,9 @@ export default function GamesPage() {
       const d = await res.json();
       const list = d.data || [];
       setGames(list);
-      // 如果当前选中的游戏被删了，切到第一个
       if (list.length > 0 && !list.find((g: Game) => g.id === rankGame)) {
-        setRankGame(list[0].id);
+        const scoreGames = list.filter((g: Game) => g.has_score !== false);
+        if (scoreGames.length > 0) setRankGame(scoreGames[0].id);
       }
     } catch {}
     setRefreshing(false);
@@ -61,10 +62,12 @@ export default function GamesPage() {
   }, [rankGame]);
 
   const rankGameInfo = games.find((g) => g.id === rankGame);
+  const scoreGames = games.filter((g) => g.has_score !== false);
 
   return (
     <div className="fade-up max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-            <div className="mb-8 flex items-start justify-between gap-4">
+      {/* 标题栏 */}
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
             小游戏
@@ -83,7 +86,7 @@ export default function GamesPage() {
         </button>
       </div>
 
-      {/* 游戏卡片网格 - 动态渲染 */}
+      {/* 游戏卡片网格 */}
       {games.length === 0 ? (
         <div className="glass-card p-10 text-center mb-10">
           <div className="text-4xl mb-2">🎮</div>
@@ -92,54 +95,56 @@ export default function GamesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-10">
           {games.map((g) => (
-                      <div key={g.id} className="relative">
-            <Link href={g.path || `/games/${g.id}`} className="block group">
-              <div className="glass-card overflow-hidden relative h-full">
-                <div
-                  className="absolute inset-0 opacity-90"
-                  style={{ background: g.gradient }}
-                />
-                <div className="relative p-5 sm:p-6 flex flex-col gap-4 h-full">
-                  <div className="flex items-start justify-between">
-                    <div
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl shadow-lg group-hover:scale-105 transition"
-                      style={{ background: g.gradient }}
-                    >
-                      {g.icon}
+            <div key={g.id} className="relative">
+              <Link href={g.path || `/games/${g.id}`} className="block group">
+                <div className="glass-card overflow-hidden relative h-full">
+                  <div
+                    className="absolute inset-0 opacity-90"
+                    style={{ background: g.gradient }}
+                  />
+                  <div className="relative p-5 sm:p-6 flex flex-col gap-4 h-full">
+                    <div className="flex items-start justify-between">
+                      <div
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl shadow-lg group-hover:scale-105 transition"
+                        style={{ background: g.gradient }}
+                      >
+                        {g.icon}
+                      </div>
+                      {g.tag && (
+                        <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/50 dark:border-white/10 text-gray-600 dark:text-gray-300 font-medium">
+                          {g.tag}
+                        </span>
+                      )}
                     </div>
-                    {g.tag && (
-                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/70 dark:bg-white/10 border border-white/50 dark:border-white/10 text-gray-600 dark:text-gray-300 font-medium">
-                        {g.tag}
+                    <div className="flex-1">
+                      <h2 className="text-lg sm:text-xl font-bold mb-1">{g.name}</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
+                        {g.description}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t border-white/30 dark:border-white/10">
+                      <span className="text-xs text-gray-400">点击开始</span>
+                      <span
+                        className="text-sm font-semibold group-hover:translate-x-1 transition-transform"
+                        style={{ color: g.color }}
+                      >
+                        开始 →
                       </span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-lg sm:text-xl font-bold mb-1">{g.name}</h2>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
-                      {g.description}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-white/30 dark:border-white/10">
-                    <span className="text-xs text-gray-400">点击开始</span>
-                    <span
-                      className="text-sm font-semibold group-hover:translate-x-1 transition-transform"
-                      style={{ color: g.color }}
-                    >
-                      开始 →
-                    </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-            {/* 评论入口 */}
-            <Link
-              href={`/games/${g.id}/comments`}
-              className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-black/40 backdrop-blur text-white hover:bg-black/60 transition z-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              💬 评论
-            </Link>
-          </div>
+              </Link>
+              {/* 评论入口 */}
+              <Link
+                href={`/games/${g.id}/comments`}
+                className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-black/40 backdrop-blur text-white hover:bg-black/60 transition z-10"
+              >
+                💬 评论
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 排行榜预览 */}
       <div className="glass-card p-5 sm:p-6">
@@ -160,9 +165,9 @@ export default function GamesPage() {
           </Link>
         </div>
 
-        {games.length > 0 && (
+        {scoreGames.length > 0 && (
           <div className="flex gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-            {games.filter((g) => g.has_score !== false).map((g) => (
+            {scoreGames.map((g) => (
               <button
                 key={g.id}
                 onClick={() => setRankGame(g.id)}
