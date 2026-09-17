@@ -43,6 +43,7 @@ function getDeviceId(): string {
 export default function SpinPage() {
   const [points, setPoints] = useState<number | null>(null);
   const [bet, setBet] = useState(100);
+    const [customBet, setCustomBet] = useState('');
   const [guess, setGuess] = useState<'red' | 'black' | 'green'>('red');
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -64,6 +65,10 @@ export default function SpinPage() {
   async function handleSpin() {
     if (spinning) return;
     if (points === null) return;
+        if (!Number.isFinite(bet) || bet < 1 || Math.floor(bet) !== bet) {
+      alert('下注额必须是 ≥ 1 的整数');
+      return;
+    }
     if (points < bet) {
       alert(`积分不足，需要 ${bet} 积分`);
       return;
@@ -209,17 +214,17 @@ export default function SpinPage() {
         </div>
       </div>
 
-      {/* 下注额 */}
+            {/* 下注额 */}
       <div className="glass-card p-4 mb-3">
         <div className="text-xs text-gray-500 mb-2 font-medium">💰 下注额</div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-3">
           {BETS.map((b) => (
             <button
               key={b}
-              onClick={() => setBet(b)}
+              onClick={() => { setBet(b); setCustomBet(''); }}
               disabled={spinning}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
-                bet === b
+                bet === b && !customBet
                   ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow'
                   : 'bg-white/70 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20'
               } disabled:opacity-50`}
@@ -228,6 +233,30 @@ export default function SpinPage() {
             </button>
           ))}
         </div>
+
+        {/* 自定义输入 */}
+        <div className="flex gap-2 items-center">
+          <input
+            type="number"
+            value={customBet}
+            onChange={(e) => {
+              const v = e.target.value;
+              setCustomBet(v);
+              const n = Number(v);
+              if (n > 0 && Number.isFinite(n)) {
+                setBet(Math.floor(n));
+              }
+            }}
+            placeholder="自定义下注额"
+            min={1}
+            disabled={spinning}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-white/70 dark:bg-white/10 outline-none text-sm border border-white/40 dark:border-white/10 focus:border-yellow-400 transition disabled:opacity-50"
+          />
+          <span className="text-xs text-gray-500 shrink-0">积分</span>
+        </div>
+        <p className="text-[11px] text-gray-400 mt-2">
+          下注额 ≥ 1，且不超过当前积分
+        </p>
       </div>
 
       {/* 猜颜色 */}

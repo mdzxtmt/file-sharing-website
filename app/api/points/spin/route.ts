@@ -34,11 +34,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '缺少 device_id' }, { status: 400 });
     }
 
-    const betAmount = Number(bet);
-    if (!ALLOWED_BETS.includes(betAmount)) {
-      return NextResponse.json({
-        error: `下注额必须是 ${ALLOWED_BETS.join(' / ')} 之一`,
-      }, { status: 400 });
+        const betAmount = Number(bet);
+    if (!Number.isFinite(betAmount) || betAmount < 1 || Math.floor(betAmount) !== betAmount) {
+      return NextResponse.json({ error: '下注额必须是 ≥ 1 的整数' }, { status: 400 });
+    }
+    if (betAmount > 1000000) {
+      return NextResponse.json({ error: '下注额上限 1000000' }, { status: 400 });
     }
 
     if (!ALLOWED_COLORS.includes(color)) {
