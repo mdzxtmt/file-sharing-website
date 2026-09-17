@@ -1,34 +1,34 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-type Prize = {
-  label: string;
-  points: number;
-  color: string;
+const BETS = [10, 50, 100, 500, 1000];
+
+// 与后端一致：红 7 / 黑 7 / 绿 2
+const WHEEL_COLORS: ('red' | 'black' | 'green')[] = [
+  'red', 'black', 'red', 'green',
+  'black', 'red', 'black', 'red',
+  'green', 'black', 'red', 'black',
+  'red', 'black', 'red', 'black',
+];
+
+const COLOR_CONFIG = {
+  red:   { bg: '#dc2626', label: '红', emoji: '🔴' },
+  black: { bg: '#1a1a1a', label: '黑', emoji: '⚫' },
+  green: { bg: '#16a34a', label: '绿', emoji: '🟢' },
 };
 
 type SpinResult = {
   index: number;
-  label: string;
-  color: string;
-  points_won: number;
+  result_color: 'red' | 'black' | 'green';
+  guess_color: 'red' | 'black' | 'green';
+  bet: number;
+  multiplier: number;
+  payout: number;
+  profit: number;
   points: number;
 };
-
-// 后端定义的奖品顺序（与 API 保持一致）
-const PRIZES: Prize[] = [
-  { label: '谢谢参与', points: 0,   color: '#6b7280' },
-  { label: '5 积分',   points: 5,   color: '#10b981' },
-  { label: '10 积分',  points: 10,  color: '#3b82f6' },
-  { label: '20 积分',  points: 20,  color: '#8b5cf6' },
-  { label: '50 积分',  points: 50,  color: '#ec4899' },
-  { label: '100 积分', points: 100, color: '#f59e0b' },
-  { label: '200 积分', points: 200, color: '#ef4444' },
-];
-
-const SPIN_COST = 20;
 
 function getDeviceId(): string {
   if (typeof window === 'undefined') return '';
@@ -42,10 +42,12 @@ function getDeviceId(): string {
 
 export default function SpinPage() {
   const [points, setPoints] = useState<number | null>(null);
+  const [bet, setBet] = useState(100);
+  const [guess, setGuess] = useState<'red' | 'black' | 'green'>('red');
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<SpinResult | null>(null);
-  const wheelRef = useRef<HTMLDivElement>(null);
+  const [history, setHistory] = useState<SpinResult[]>([]);
 
   // 加载积分
   useEffect(() => {
@@ -55,17 +57,15 @@ export default function SpinPage() {
       cache: 'no-store',
     })
       .then((r) => r.json())
-      .then((d) => {
-        if (d.data) setPoints(d.data.points);
-      })
+      .then((d) => { if (d.data) setPoints(d.data.points); })
       .catch(() => {});
   }, []);
 
   async function handleSpin() {
     if (spinning) return;
     if (points === null) return;
-    if (points < SPIN_COST) {
-      alert(`积分不足，需要 ${SPIN_COST} 积分`);
+    if (points < bet) {
+      alert(`积分不足，需要 ${bet} 积分`);
       return;
     }
 
@@ -77,50 +77,45 @@ export default function SpinPage() {
       const res = await fetch('/api/points/spin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ device_id: id }),
+        body: JSON.stringify({ device_id: id, bet, color: guess }),
       });
       const d = await res.json();
 
       if (!res.ok) {
-        alert(d.error || '抽奖失败');
+        alert(d.error || '下注失败');
         setSpinning(false);
         return;
       }
 
       const winIndex = d.data.index;
-      const totalPrizes = PRIZES.length;
-      const anglePerPrize = 360 / totalPrizes;
+      const totalSlots = WHEEL_COLORS.length;
+      const anglePerSlot = 360 / totalSlots;
 
-      // 让中奖扇区的中心停在顶部（指针位置）
-      // 当前顶部指向奖品 0 的起始边界
-      // 奖品 i 中心角度 = (i + 0.5) * anglePerPrize
-      // 转盘需要顺时针旋转：360 * N - (i + 0.5) * anglePerPrize
-      // 加上随机偏移避免每次都一样
+      // 让中奖格中心停在指针位置（顶部）
       const baseRotation = rotation % 360;
-      const targetAngle = 360 - (winIndex + 0.5) * anglePerPrize;
-      const randomOffset = (Math.random() - 0.5) * (anglePerPrize * 0.6);
-      const finalRotation = rotation - baseRotation + 360 * 5 + targetAngle + randomOffset;
+      const targetAngle = 360 - (winIndex + 0.5) * anglePerSlot;
+      const randomOffset = (Math.random() - 0.5) * (anglePerSlot * 0.6);
+      const finalRotation = rotation - baseRotation + 360 * 6 + targetAngle + randomOffset;
 
       setRotation(finalRotation);
 
-      // 等动画结束
       setTimeout(() => {
         setResult(d.data);
         setPoints(d.data.points);
+        setHistory((h) => [d.data, ...h].slice(0, 10));
         setSpinning(false);
-      }, 4500);
+      }, 5000);
     } catch (e: any) {
-      alert('抽奖失败：' + e.message);
+      alert('网络错误：' + e.message);
       setSpinning(false);
     }
   }
 
-  // 生成 conic-gradient 颜色
-  const anglePerPrize = 360 / PRIZES.length;
-  const gradientStops = PRIZES.map((p, i) => {
-    const start = i * anglePerPrize;
-    const end = (i + 1) * anglePerPrize;
-    return `${p.color} ${start}deg ${end}deg`;
+  const anglePerSlot = 360 / WHEEL_COLORS.length;
+  const gradientStops = WHEEL_COLORS.map((color, i) => {
+    const start = i * anglePerSlot;
+    const end = (i + 1) * anglePerSlot;
+    return `${COLOR_CONFIG[color].bg} ${start}deg ${end}deg`;
   }).join(', ');
 
   return (
@@ -128,22 +123,19 @@ export default function SpinPage() {
       {/* 标题 */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-yellow-500 via-orange-500 to-pink-500 bg-clip-text text-transparent">
-            🎰 转盘抽奖
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-red-500 via-gray-700 to-green-500 bg-clip-text text-transparent">
+            🎰 幸运轮盘
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            每次消耗 {SPIN_COST} 积分
+            猜颜色：红 ×2 / 黑 ×2 / 绿 ×10
           </p>
         </div>
-        <Link
-          href="/user"
-          className="text-sm text-indigo-500 hover:underline shrink-0"
-        >
+        <Link href="/user" className="text-sm text-indigo-500 hover:underline shrink-0">
           ← 我的
         </Link>
       </div>
 
-      {/* 积分显示 */}
+      {/* 积分 */}
       <div className="glass-card p-4 mb-6 flex items-center justify-between">
         <span className="text-sm text-gray-500">当前积分</span>
         <span className="text-2xl font-bold text-yellow-500 tabular-nums">
@@ -153,149 +145,242 @@ export default function SpinPage() {
 
       {/* 转盘 */}
       <div className="relative flex items-center justify-center mb-6 select-none">
-        {/* 指针 */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20" style={{ marginTop: '-8px' }}>
+        {/* 顶部指针 */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20" style={{ marginTop: '-12px' }}>
           <div
             className="w-0 h-0"
             style={{
-              borderLeft: '14px solid transparent',
-              borderRight: '14px solid transparent',
-              borderTop: '28px solid #fbbf24',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))',
+              borderLeft: '16px solid transparent',
+              borderRight: '16px solid transparent',
+              borderTop: '32px solid #fbbf24',
+              filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))',
             }}
           />
         </div>
 
-        {/* 转盘主体 */}
-        <div className="relative w-[300px] h-[300px] sm:w-[380px] sm:h-[380px]">
-          {/* 外圈 */}
-          <div className="absolute inset-0 rounded-full shadow-2xl"
+        <div className="relative w-[320px] h-[320px] sm:w-[400px] sm:h-[400px]">
+          <div
+            className="absolute inset-0 rounded-full shadow-2xl"
             style={{
               background: 'linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24)',
-              padding: '8px',
+              padding: '10px',
             }}
           >
-            {/* 转盘 */}
             <div
-              ref={wheelRef}
               className="w-full h-full rounded-full relative"
               style={{
                 background: `conic-gradient(${gradientStops})`,
                 transform: `rotate(${rotation}deg)`,
-                transition: spinning ? 'transform 4.5s cubic-bezier(0.15, 0.9, 0.15, 1)' : 'none',
+                transition: spinning
+                  ? 'transform 5s cubic-bezier(0.15, 0.9, 0.15, 1)'
+                  : 'none',
               }}
             >
-              {/* 奖品文字 */}
-              {PRIZES.map((prize, i) => {
-                const angle = (i + 0.5) * anglePerPrize;
+              {/* 每格上的数字 */}
+              {WHEEL_COLORS.map((_, i) => {
+                const angle = (i + 0.5) * anglePerSlot;
                 return (
                   <div
                     key={i}
-                    className="absolute top-0 left-1/2 h-1/2 origin-bottom"
+                    className="absolute top-0 left-1/2 h-1/2 origin-bottom flex justify-center"
                     style={{
                       transform: `translateX(-50%) rotate(${angle}deg)`,
-                      width: '60px',
+                      width: '40px',
                     }}
                   >
-                    <div className="absolute top-4 sm:top-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                    <div className="pt-5 sm:pt-7">
                       <span
-                        className="text-white font-bold text-xs sm:text-sm drop-shadow-md"
-                        style={{
-                          writingMode: 'vertical-rl',
-                          textOrientation: 'mixed',
-                          letterSpacing: '2px',
-                        }}
+                        className="text-white font-extrabold text-sm sm:text-base"
+                        style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}
                       >
-                        {prize.label}
+                        {i + 1}
                       </span>
                     </div>
                   </div>
                 );
               })}
 
-              {/* 中心圆 */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white shadow-lg flex items-center justify-center z-10">
-                <span className="text-2xl sm:text-3xl">🎯</span>
+              {/* 中心宝石 */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 shadow-2xl flex items-center justify-center z-10 border-4 border-white">
+                <span className="text-2xl sm:text-3xl">💎</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 抽奖按钮 */}
-      <button
-        onClick={handleSpin}
-        disabled={spinning || points === null || points < SPIN_COST}
-        className="btn-gradient w-full py-4 text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {spinning
-          ? '抽奖中…'
-          : points === null
-          ? '加载中…'
-          : points < SPIN_COST
-          ? `积分不足（需要 ${SPIN_COST}）`
-          : `🎲 开始抽奖（-${SPIN_COST} 积分）`}
-      </button>
-
-      {/* 结果 */}
-      {result && (
-        <div className="glass-card p-5 mt-6 text-center fade-up">
-          {result.points_won > 0 ? (
-            <>
-              <div className="text-5xl mb-3">🎉</div>
-              <div className="text-lg font-bold mb-2">
-                恭喜获得
-              </div>
-              <div
-                className="text-3xl font-extrabold mb-3"
-                style={{ color: result.color }}
-              >
-                {result.label}
-              </div>
-              <div className="text-sm text-gray-500">
-                当前积分：<span className="font-bold text-yellow-500">{result.points}</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-5xl mb-3">😅</div>
-              <div className="text-lg font-bold mb-2">谢谢参与</div>
-              <div className="text-sm text-gray-500">
-                再来一次吧，运气总会来的！
-              </div>
-              <div className="text-sm text-gray-500 mt-2">
-                当前积分：<span className="font-bold text-yellow-500">{result.points}</span>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* 奖品列表 */}
-      <div className="glass-card p-5 mt-6">
-        <h3 className="text-sm font-bold mb-3 text-gray-600 dark:text-gray-300">
-          🎁 奖品列表
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {PRIZES.map((p, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/50 dark:bg-white/5"
+      {/* 下注额 */}
+      <div className="glass-card p-4 mb-3">
+        <div className="text-xs text-gray-500 mb-2 font-medium">💰 下注额</div>
+        <div className="flex flex-wrap gap-2">
+          {BETS.map((b) => (
+            <button
+              key={b}
+              onClick={() => setBet(b)}
+              disabled={spinning}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                bet === b
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow'
+                  : 'bg-white/70 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20'
+              } disabled:opacity-50`}
             >
-              <span
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{ background: p.color }}
-              />
-              <span className="text-xs truncate">{p.label}</span>
-            </div>
+              {b}
+            </button>
           ))}
         </div>
       </div>
 
-      {/* 提示 */}
-      <div className="text-center text-xs text-gray-400 mt-6 space-y-1">
-        <p>💡 每天签到可获得积分，连续签到奖励更高</p>
-        <p>🎯 抽奖消耗 {SPIN_COST} 积分，中奖积分立即到账</p>
+      {/* 猜颜色 */}
+      <div className="glass-card p-4 mb-4">
+        <div className="text-xs text-gray-500 mb-2 font-medium">🎯 猜颜色</div>
+        <div className="grid grid-cols-3 gap-2">
+          {(['red', 'black', 'green'] as const).map((c) => {
+            const cfg = COLOR_CONFIG[c];
+            const active = guess === c;
+            const multiplier = c === 'green' ? 10 : 2;
+            return (
+              <button
+                key={c}
+                onClick={() => setGuess(c)}
+                disabled={spinning}
+                className={`relative py-3 rounded-xl text-white font-bold text-sm transition disabled:opacity-50 ${
+                  active ? 'ring-4 ring-yellow-400 shadow-lg scale-105' : 'opacity-70 hover:opacity-100'
+                }`}
+                style={{ background: cfg.bg }}
+              >
+                <div className="text-xl mb-0.5">{cfg.emoji}</div>
+                <div>{cfg.label}</div>
+                <div className="text-[10px] opacity-80 mt-0.5">×{multiplier}</div>
+                {active && (
+                  <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-black text-xs font-bold">
+                    ✓
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 转动按钮 */}
+      <button
+        onClick={handleSpin}
+        disabled={spinning || points === null || points < bet}
+        className="w-full py-4 text-base font-bold rounded-xl text-white transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+        style={{
+          background: spinning
+            ? 'linear-gradient(135deg, #6b7280, #4b5563)'
+            : `linear-gradient(135deg, ${COLOR_CONFIG[guess].bg}, #f59e0b)`,
+        }}
+      >
+        {spinning
+          ? '🎲 转动中…'
+          : points === null
+          ? '加载中…'
+          : points < bet
+          ? `积分不足（需 ${bet}）`
+          : `🎰 猜${COLOR_CONFIG[guess].label} 下注 ${bet}`}
+      </button>
+
+      {/* 结果 */}
+      {result && (
+        <div className="glass-card p-6 mt-6 text-center fade-up">
+          <div className="text-7xl mb-3">
+            {result.profit > 0 ? '🎉' : result.profit === 0 ? '😐' : '💸'}
+          </div>
+          <div className="mb-4">
+            <div className="text-xs text-gray-500 mb-2">开出</div>
+            <div
+              className="inline-block px-6 py-3 rounded-2xl text-white text-2xl font-extrabold shadow-lg"
+              style={{ background: COLOR_CONFIG[result.result_color].bg }}
+            >
+              {COLOR_CONFIG[result.result_color].emoji} {COLOR_CONFIG[result.result_color].label}
+            </div>
+          </div>
+          <div className="text-lg font-bold mb-3">
+            {result.profit > 0 ? (
+              <span className="text-green-500">+{result.profit} 积分</span>
+            ) : result.profit === 0 ? (
+              <span className="text-gray-400">保本</span>
+            ) : (
+              <span className="text-red-500">{result.profit} 积分</span>
+            )}
+          </div>
+          <div className="text-sm text-gray-500 space-y-1">
+            <div>下注 <b>{result.bet}</b>，返还 <b>{result.payout}</b></div>
+            {result.multiplier > 0 && (
+              <div className="text-xs text-green-500">倍率 ×{result.multiplier}</div>
+            )}
+            <div className="pt-2 border-t border-white/20 mt-2">
+              当前积分：
+              <span className="font-bold text-yellow-500 text-lg">{result.points}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 历史 */}
+      {history.length > 0 && (
+        <div className="glass-card p-5 mt-6">
+          <h3 className="text-sm font-bold mb-3 text-gray-600 dark:text-gray-300">
+            📜 最近记录
+          </h3>
+          <div className="space-y-1.5">
+            {history.map((h, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-white/50 dark:bg-white/5 gap-2"
+              >
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLOR_CONFIG[h.guess_color].bg }} />
+                  <span className="text-gray-400">→</span>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLOR_CONFIG[h.result_color].bg }} />
+                </span>
+                <span className="text-gray-500">下注 {h.bet}</span>
+                <span
+                  className={`font-bold tabular-nums shrink-0 ${
+                    h.profit > 0 ? 'text-green-500' : h.profit === 0 ? 'text-gray-400' : 'text-red-500'
+                  }`}
+                >
+                  {h.profit >= 0 ? '+' : ''}{h.profit}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 概率说明 */}
+      <div className="glass-card p-5 mt-6">
+        <h3 className="text-sm font-bold mb-3 text-gray-600 dark:text-gray-300">
+          🎯 概率与倍率
+        </h3>
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          {[
+            { color: 'red', count: 7, multiplier: 2 },
+            { color: 'black', count: 7, multiplier: 2 },
+            { color: 'green', count: 2, multiplier: 10 },
+          ].map(({ color, count, multiplier }) => {
+            const c = color as 'red' | 'black' | 'green';
+            const prob = (count / 16 * 100).toFixed(1);
+            return (
+              <div
+                key={color}
+                className="flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-white"
+                style={{ background: COLOR_CONFIG[c].bg }}
+              >
+                <span className="text-2xl">{COLOR_CONFIG[c].emoji}</span>
+                <span className="font-bold">{COLOR_CONFIG[c].label}</span>
+                <span className="text-[10px] opacity-80">{prob}%</span>
+                <span className="text-xs font-bold">×{multiplier}</span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-gray-400 mt-3 text-center leading-relaxed">
+          💡 转盘共 16 格：红 7 / 黑 7 / 绿 2<br />
+          猜中红或黑返还 ×2（含本金），猜中绿返还 ×10（含本金），猜错输光
+        </p>
       </div>
     </div>
   );
