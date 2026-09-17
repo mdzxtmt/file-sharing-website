@@ -24,6 +24,13 @@ export async function GET(req: NextRequest) {
     if (!deviceId) {
       return NextResponse.json({ error: '缺少 device_id' }, { status: 400 });
     }
+     // 更新最后活跃时间（心跳）
+    try {
+      await supabase
+        .from('user_points')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('device_id', deviceId);
+    } catch {}
 
     // 查用户
     let { data: user, error } = await supabase
@@ -48,13 +55,23 @@ export async function GET(req: NextRequest) {
 
       if (createErr) throw createErr;
       user = created;
-    } else if (playerName && user.player_name !== playerName) {
-      // 同步昵称
-      await supabase
-        .from('user_points')
-        .update({ player_name: playerName })
-        .eq('device_id', deviceId);
-      user.player_name = playerName;
+        } else {
+      // 同步昵称/头像
+      const updates: any = {};
+      if (playerName && user.player_name !== playerName) {
+        updates.player_name = playerName;
+      }
+      const avatarParam = searchParams.get('avatar');
+      if (avatarParam && user.avatar !== avatarParam) {
+        updates.avatar = avatarParam.slice(0, 8);
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase
+          .from('user_points')
+          .update(updates)
+          .eq('device_id', deviceId);
+        Object.assign(user, updates);
+      }
     }
 
     // 计算今天是否已签到
@@ -70,9 +87,10 @@ export async function GET(req: NextRequest) {
       if (diffDays > 1) displayStreak = 0;
     }
 
-    return NextResponse.json({
+        return NextResponse.json({
       data: {
         points: user.points,
+        avatar: user.avatar || '😀',
         last_checkin: user.last_checkin,
         checkin_streak: displayStreak,
         total_checkins: user.total_checkins,
