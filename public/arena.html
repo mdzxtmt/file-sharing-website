@@ -996,50 +996,151 @@ function buildPistolModel() {
 function buildButterflyModel() {
   const g = new THREE.Group();
 
-  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xd0d6de, roughness: 0.12, metalness: 0.95 });
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.6, metalness: 0.4 });
-  const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x334455, emissiveIntensity: 0.4 });
+  const bladeMat = new THREE.MeshStandardMaterial({
+    color: 0xe8eef5, roughness: 0.05, metalness: 1.0,
+    envMapIntensity: 1.5
+  });
+  const handleMat = new THREE.MeshStandardMaterial({
+    color: 0x1a1d22, roughness: 0.35, metalness: 0.75
+  });
+  const handleSlotMat = new THREE.MeshStandardMaterial({
+    color: 0x0a0c0f, roughness: 0.9, metalness: 0.1
+  });
+  const pivotMat = new THREE.MeshStandardMaterial({
+    color: 0xb8c0cc, roughness: 0.15, metalness: 1.0
+  });
+  const edgeMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff, roughness: 0.0, metalness: 1.0,
+    emissive: 0x667788, emissiveIntensity: 0.6
+  });
 
-  const handleGeo = new THREE.BoxGeometry(0.045, 0.085, 0.24);
-  const handleL = new THREE.Mesh(handleGeo, handleMat);
-  handleL.position.set(-0.028, -0.03, 0.08);
-  g.add(handleL);
+  // ===== 手柄 A（左侧，带镂空槽）=====
+  const handleA = new THREE.Group();
 
-  const handleR = new THREE.Mesh(handleGeo, handleMat);
-  handleR.position.set(0.028, -0.03, 0.08);
-  g.add(handleR);
+  // 手柄外框（两片）
+  const frameGeo = new THREE.BoxGeometry(0.014, 0.09, 0.26);
+  const frameFront = new THREE.Mesh(frameGeo, handleMat);
+  frameFront.position.set(0, 0, 0);
+  handleA.add(frameFront);
 
-  const grooveGeo = new THREE.BoxGeometry(0.005, 0.06, 0.18);
-  const grooveMat = new THREE.MeshStandardMaterial({ color: 0x0a0d11, roughness: 0.9 });
-  const grooveL = new THREE.Mesh(grooveGeo, grooveMat);
-  grooveL.position.set(-0.05, -0.03, 0.08);
-  g.add(grooveL);
-  const grooveR = new THREE.Mesh(grooveGeo, grooveMat);
-  grooveR.position.set(0.05, -0.03, 0.08);
-  g.add(grooveR);
+  // 中间镂空槽（用两块填充块模拟）
+  const slotGeo = new THREE.BoxGeometry(0.006, 0.045, 0.22);
+  const slot = new THREE.Mesh(slotGeo, handleSlotMat);
+  slot.position.set(0.008, 0, 0);
+  handleA.add(slot);
 
-  const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 8).rotateZ(Math.PI / 2), edgeMat);
-  pivot.position.set(0, 0.005, -0.06);
+  // 手柄底部圆角
+  const capGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.014, 16).rotateZ(Math.PI / 2);
+  const capBottom = new THREE.Mesh(capGeo, handleMat);
+  capBottom.position.set(0, 0, 0.13);
+  handleA.add(capBottom);
+
+  // 枢轴端圆角
+  const capTop = new THREE.Mesh(capGeo, handleMat);
+  capTop.position.set(0, 0, -0.13);
+  handleA.add(capTop);
+
+  // 手柄侧边装饰纹
+  for (let i = 0; i < 3; i++) {
+    const groove = new THREE.Mesh(
+      new THREE.BoxGeometry(0.016, 0.005, 0.04),
+      handleSlotMat
+    );
+    groove.position.set(0, 0, -0.08 + i * 0.07);
+    handleA.add(groove);
+  }
+
+  handleA.position.set(-0.032, -0.06, 0.10);
+  g.add(handleA);
+
+  // ===== 手柄 B（右侧，镜像）=====
+  const handleB = handleA.clone();
+  handleB.position.set(0.032, -0.06, 0.10);
+  g.add(handleB);
+
+  // ===== 枢轴 =====
+  const pivot = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.022, 0.022, 0.075, 12).rotateZ(Math.PI / 2),
+    pivotMat
+  );
+  pivot.position.set(0, -0.06, -0.03);
   g.add(pivot);
 
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.05, 0.42), bladeMat);
-  blade.position.set(0, 0.02, -0.30);
+  // 枢轴螺丝
+  const screwGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.08, 6).rotateZ(Math.PI / 2);
+  const screw = new THREE.Mesh(screwGeo, handleSlotMat);
+  screw.position.set(0, -0.06, -0.03);
+  g.add(screw);
+
+  // ===== 刀身（细长，真实蝴蝶刀刀刃）=====
+  const blade = new THREE.Group();
+
+  // 刀身主体（用锥形几何模拟刀刃的粗细变化）
+  const bladeBody = new THREE.Mesh(
+    new THREE.BoxGeometry(0.016, 0.055, 0.38),
+    bladeMat
+  );
+  bladeBody.position.set(0, 0, -0.19);
+  blade.add(bladeBody);
+
+  // 刀刃斜面（用三角锥体模拟刃口）
+  const edgeGeo = new THREE.BufferGeometry();
+  const edgeVerts = new Float32Array([
+    // 左侧刃口
+    0.008, 0.0275, 0,
+    0.008, -0.0275, 0,
+    0.016, 0, -0.38,
+  ]);
+  edgeGeo.setAttribute('position', new THREE.BufferAttribute(edgeVerts, 3));
+  edgeGeo.computeVertexNormals();
+  const edgeTri = new THREE.Mesh(edgeGeo, edgeMat);
+  blade.add(edgeTri);
+
+  // 刀尖（尖锐）
+  const tipGeo = new THREE.ConeGeometry(0.028, 0.10, 4);
+  const tip = new THREE.Mesh(tipGeo, bladeMat);
+  tip.rotation.x = -Math.PI / 2;
+  tip.rotation.z = Math.PI / 4;
+  tip.position.set(0, 0, -0.43);
+  blade.add(tip);
+
+  // 刀背加厚
+  const spine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.018, 0.014, 0.36),
+    bladeMat
+  );
+  spine.position.set(-0.008, 0.02, -0.19);
+  blade.add(spine);
+
+  // 刃口高光条
+  const edgeGlow = new THREE.Mesh(
+    new THREE.BoxGeometry(0.002, 0.004, 0.40),
+    edgeMat
+  );
+  edgeGlow.position.set(0.009, 0.01, -0.20);
+  blade.add(edgeGlow);
+
+  // 刀身基部（连接枢轴的部分）
+  const bladeBase = new THREE.Mesh(
+    new THREE.BoxGeometry(0.02, 0.06, 0.06),
+    bladeMat
+  );
+  bladeBase.position.set(0, 0, 0.02);
+  blade.add(bladeBase);
+
+  blade.position.set(0, -0.06, -0.03);
   g.add(blade);
 
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.10, 6).rotateX(-Math.PI / 2), bladeMat);
-  tip.position.set(0, 0.02, -0.56);
-  g.add(tip);
-
-  const edge = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.006, 0.44), edgeMat);
-  edge.position.set(0.008, 0.02, -0.30);
-  g.add(edge);
-
-  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.06, 0.12), handleMat);
-  tail.position.set(0, -0.03, 0.20);
-  g.add(tail);
+  // 刀身装饰（刃根处的小凹槽）
+  const choil = new THREE.Mesh(
+    new THREE.BoxGeometry(0.018, 0.02, 0.03),
+    handleSlotMat
+  );
+  choil.position.set(0, -0.075, -0.06);
+  g.add(choil);
 
   const muzzleObj = new THREE.Object3D();
-  muzzleObj.position.set(0, 0.02, -0.62);
+  muzzleObj.position.set(0, -0.06, -0.58);
   g.add(muzzleObj);
 
   return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
@@ -1048,63 +1149,154 @@ function buildButterflyModel() {
 function buildKarambitModel() {
   const g = new THREE.Group();
 
-  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xc0c8d4, roughness: 0.12, metalness: 0.98 });
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1f2226, roughness: 0.55, metalness: 0.45 });
-  const ringMat = new THREE.MeshStandardMaterial({ color: 0x0d0f12, roughness: 0.4, metalness: 0.9 });
+  const bladeMat = new THREE.MeshStandardMaterial({
+    color: 0xd8dfe8, roughness: 0.08, metalness: 1.0,
+    envMapIntensity: 1.5
+  });
+  const handleMat = new THREE.MeshStandardMaterial({
+    color: 0x1e2126, roughness: 0.55, metalness: 0.35
+  });
+  const ringMat = new THREE.MeshStandardMaterial({
+    color: 0x0d0f12, roughness: 0.3, metalness: 0.95
+  });
+  const edgeMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff, roughness: 0.0, metalness: 1.0,
+    emissive: 0x556677, emissiveIntensity: 0.5
+  });
 
-  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.20), handleMat);
-  handle.position.set(0, -0.02, 0.10);
-  g.add(handle);
+  // ===== 手柄（带 5 段防滑纹）=====
+  const handle = new THREE.Group();
 
-  for (let i = 0; i < 4; i++) {
+  // 手柄主体
+  const handleBody = new THREE.Mesh(
+    new THREE.BoxGeometry(0.048, 0.075, 0.19),
+    handleMat
+  );
+  handleBody.position.set(0, 0, 0.095);
+  handle.add(handleBody);
+
+  // 手柄圆角两端
+  const capGeo = new THREE.CylinderGeometry(0.038, 0.038, 0.048, 16).rotateZ(Math.PI / 2);
+  const capFront = new THREE.Mesh(capGeo, handleMat);
+  capFront.position.set(0, 0, 0.19);
+  handle.add(capFront);
+
+  // 5 段防滑纹
+  for (let i = 0; i < 5; i++) {
     const grip = new THREE.Mesh(
-      new THREE.BoxGeometry(0.052, 0.006, 0.015),
-      new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.95 })
+      new THREE.BoxGeometry(0.052, 0.008, 0.022),
+      new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.95, metalness: 0.0 })
     );
-    grip.position.set(0, -0.02, 0.03 + i * 0.045);
-    g.add(grip);
+    grip.position.set(0, 0, 0.02 + i * 0.035);
+    handle.add(grip);
   }
 
-  const fingerRing = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.012, 10, 20), ringMat);
-  fingerRing.position.set(0, -0.02, 0.24);
-  fingerRing.rotation.y = Math.PI / 2;
+  // 手柄上的固定螺丝
+  for (let i = 0; i < 2; i++) {
+    const bolt = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.006, 0.006, 0.052, 6).rotateZ(Math.PI / 2),
+      ringMat
+    );
+    bolt.position.set(0, 0, 0.06 + i * 0.09);
+    handle.add(bolt);
+  }
+
+  handle.position.set(0, -0.02, 0.06);
+  g.add(handle);
+
+  // ===== 指环（标志性的大圆环）=====
+  const fingerRing = new THREE.Group();
+
+  // 主圆环
+  const ringGeo = new THREE.TorusGeometry(0.055, 0.011, 12, 32);
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.y = Math.PI / 2;
+  fingerRing.add(ring);
+
+  // 环上的防滑纹（6 个小块）
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2;
+    const notch = new THREE.Mesh(
+      new THREE.BoxGeometry(0.014, 0.014, 0.006),
+      handleMat
+    );
+    notch.position.set(0, Math.cos(angle) * 0.055, Math.sin(angle) * 0.055);
+    notch.rotation.x = -angle;
+    fingerRing.add(notch);
+  }
+
+  // 环与手柄的连接桥
+  const bridge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.042, 0.02, 0.03),
+    handleMat
+  );
+  bridge.position.set(0, 0, 0);
+  fingerRing.add(bridge);
+
+  fingerRing.position.set(0, -0.02, 0.23);
   g.add(fingerRing);
 
-  const bladeSegments = [
-    { x: 0.0,   y: 0.05, z: -0.06, rot: 0.0,  len: 0.10 },
-    { x: 0.02,  y: 0.10, z: -0.14, rot: 0.35, len: 0.10 },
-    { x: 0.045, y: 0.15, z: -0.21, rot: 0.75, len: 0.10 },
-    { x: 0.055, y: 0.20, z: -0.27, rot: 1.15, len: 0.09 },
+  // ===== 刀刃（爪刀标志性的内弯钩形）=====
+  const blade = new THREE.Group();
+
+  // 用曲线路径 + 多段盒子模拟弯曲刀刃
+  // 曲线从刃根（-z 方向）向前、向上、向内弯
+  const bladePath = [
+    { z: -0.04, y: 0.00, x: 0.00, scale: 1.0,  rotX: 0.00 },
+    { z: -0.09, y: 0.02, x: 0.01, scale: 0.98, rotX: 0.15 },
+    { z: -0.14, y: 0.06, x: 0.02, scale: 0.95, rotX: 0.38 },
+    { z: -0.18, y: 0.11, x: 0.03, scale: 0.92, rotX: 0.65 },
+    { z: -0.21, y: 0.17, x: 0.04, scale: 0.88, rotX: 0.95 },
+    { z: -0.23, y: 0.23, x: 0.05, scale: 0.82, rotX: 1.25 },
+    { z: -0.24, y: 0.29, x: 0.055, scale: 0.75, rotX: 1.55 },
   ];
-  bladeSegments.forEach((p, i) => {
+
+  bladePath.forEach((p, i) => {
+    const segHeight = 0.055 * p.scale;
+    const segWidth = 0.014 * p.scale;
+    const segDepth = 0.06;
+
     const seg = new THREE.Mesh(
-      new THREE.BoxGeometry(0.012, 0.045 - i * 0.005, p.len),
+      new THREE.BoxGeometry(segWidth, segHeight, segDepth),
       bladeMat
     );
     seg.position.set(p.x, p.y, p.z);
-    seg.rotation.x = p.rot;
-    g.add(seg);
+    seg.rotation.x = p.rotX;
+    blade.add(seg);
+
+    // 刃口高光
+    if (i >= 1) {
+      const edgeLine = new THREE.Mesh(
+        new THREE.BoxGeometry(0.002, 0.004, segDepth * 0.9),
+        edgeMat
+      );
+      edgeLine.position.set(p.x + segWidth * 0.6, p.y - segHeight * 0.3, p.z);
+      edgeLine.rotation.x = p.rotX;
+      blade.add(edgeLine);
+    }
   });
 
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.09, 6).rotateX(-Math.PI / 2), bladeMat);
-  tip.position.set(0.055, 0.26, -0.33);
-  tip.rotation.x = 1.7;
-  g.add(tip);
+  // 刀尖（最尖锐的部分）
+  const tipGeo = new THREE.ConeGeometry(0.02, 0.09, 4);
+  const tip = new THREE.Mesh(tipGeo, bladeMat);
+  tip.rotation.x = 1.9;
+  tip.rotation.z = Math.PI / 4;
+  tip.position.set(0.06, 0.36, -0.235);
+  blade.add(tip);
 
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.08), handleMat);
-  base.position.set(0, 0.01, -0.04);
-  g.add(base);
-
-  const edgeGlow = new THREE.Mesh(
-    new THREE.BoxGeometry(0.003, 0.005, 0.30),
-    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x334455, emissiveIntensity: 0.4 })
+  // 刃根强化（连接手柄和刀刃）
+  const bladeBase = new THREE.Mesh(
+    new THREE.BoxGeometry(0.03, 0.05, 0.06),
+    bladeMat
   );
-  edgeGlow.position.set(0.03, 0.14, -0.20);
-  edgeGlow.rotation.x = 0.7;
-  g.add(edgeGlow);
+  bladeBase.position.set(0, 0, -0.015);
+  blade.add(bladeBase);
+
+  blade.position.set(0, -0.02, 0.06);
+  g.add(blade);
 
   const muzzleObj = new THREE.Object3D();
-  muzzleObj.position.set(0.055, 0.28, -0.36);
+  muzzleObj.position.set(0.06, 0.36, -0.35);
   g.add(muzzleObj);
 
   return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
