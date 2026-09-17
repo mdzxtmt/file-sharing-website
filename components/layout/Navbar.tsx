@@ -109,6 +109,49 @@ function StatusBadge() {
     </button>
   );
 }
+/* ===== 在线人数徽章 ===== */
+function OnlineBadge() {
+  const [online, setOnline] = useState<number | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
+
+  async function check() {
+    try {
+      const res = await fetch('/api/online?t=' + Date.now(), { cache: 'no-store' });
+      const d = await res.json();
+      if (d.online !== undefined) {
+        setOnline(d.online);
+        setTotal(d.total);
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    check();
+    const t = setInterval(check, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  if (online === null) return null;
+
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium shrink-0"
+      style={{
+        background: 'rgba(34,197,94,0.1)',
+        color: '#16a34a',
+        border: '1px solid rgba(34,197,94,0.25)',
+      }}
+      title={`在线 ${online} 人 / 总共 ${total} 人`}
+    >
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping bg-green-500" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+      </span>
+      <span className="whitespace-nowrap tabular-nums">{online}</span>
+      <span className="opacity-60 hidden sm:inline">在线</span>
+    </div>
+  );
+}
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -180,6 +223,9 @@ export default function Navbar() {
           <div className="flex items-center gap-2 shrink-0">
             <div className="hidden sm:block">
               <StatusBadge />
+            </div>
+            <div className="hidden md:block">
+              <OnlineBadge />
             </div>
 
             {/* 汉堡按钮 */}
@@ -255,8 +301,9 @@ export default function Navbar() {
           })}
         </div>
 
-        <div className="p-4 border-t border-white/40 dark:border-white/10">
+        <div className="p-4 border-t border-white/40 dark:border-white/10 space-y-3">
           <StatusBadge />
+          <OnlineBadge />
         </div>
       </aside>
     </>
