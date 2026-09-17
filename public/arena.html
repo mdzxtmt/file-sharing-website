@@ -5,18 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ARENA FPS — 3D 枪战</title>
 <style>
-  /* ==================== 基础 ==================== */
   * { margin:0; padding:0; box-sizing:border-box; }
-  html, body {
-    width:100%; height:100%; overflow:hidden; background:#06090f;
+  html, body { width:100%; height:100%; overflow:hidden; background:#06090f;
     font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
     user-select:none; color:#dfe8f5;
-    -webkit-user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
-  }
+    -webkit-user-select:none; -webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent; }
   canvas { display:block; touch-action:none; }
   button, .btn, .btn-toggle, .tb { touch-action: manipulation; }
-
-  /* ==================== HUD ==================== */
   #hud { position:fixed; inset:0; pointer-events:none; z-index:5; }
   #crosshair { position:absolute; left:50%; top:50%; width:26px; height:26px; transform:translate(-50%,-50%); }
   #crosshair .bar { position:absolute; background:#7dfcff; box-shadow:0 0 6px #22d3ee; border-radius:2px; opacity:.85; }
@@ -48,7 +44,7 @@
   #ammo small { font-size:16px; color:#6b87a8; font-weight:500; }
   #reloadHint { margin-top:4px; font-size:12px; letter-spacing:2px; color:#ffb547; height:16px; }
   #upgradeHint { margin-top:2px; font-size:11px; letter-spacing:2px; color:#5f7fa3; }
-  #slots { position:absolute; right:30px; bottom:126px; display:flex; gap:8px; justify-content:flex-end; }
+  #slots { position:absolute; right:30px; bottom:126px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; max-width:420px; }
   .slot { padding:4px 9px; border-radius:6px; font-size:11px; letter-spacing:1px;
     background:rgba(10,16,26,.5); border:1px solid rgba(90,160,220,.22); color:#5f7fa3; }
   .slot.active { color:#04121c; background:linear-gradient(180deg,#8fe9ff,#28b6e8);
@@ -93,8 +89,6 @@
   #scope .ch { position:absolute; background:rgba(0,0,0,.85); }
   #scope .ch.h { left:0; right:0; top:50%; height:1px; }
   #scope .ch.v { top:0; bottom:0; left:50%; width:1px; }
-
-  /* ==================== 触摸控件 ==================== */
   #touchControls { position:fixed; inset:0; z-index:15; display:none; pointer-events:none; }
   #touchControls.active { display:block; }
   #moveStick {
@@ -138,9 +132,9 @@
     animation:parryPulse .55s infinite alternate ease-in-out; }
   #btnParry.pressed { background:rgba(255,180,40,.9); color:#221800; transform:scale(.94); }
   @keyframes parryPulse { 0% { box-shadow:0 0 20px rgba(255,180,40,.35); } 100% { box-shadow:0 0 34px rgba(255,200,60,.85); } }
-  #btnW1 { right:4vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; }
-  #btnW2 { right:14vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; }
-  #btnW3 { right:24vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; }
+  #btnW1 { right:4vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; font-weight:bold; }
+  #btnW2 { right:14vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; font-weight:bold; }
+  #btnW3 { right:24vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; font-weight:bold; }
   #btnW1.active, #btnW2.active, #btnW3.active {
     background:linear-gradient(180deg,#8fe9ff,#28b6e8); color:#04121c; border-color:transparent;
   }
@@ -148,8 +142,6 @@
     border-color:rgba(255,180,80,.5); color:#ffce88; }
   #btnPause { left:4vmin; top:4vmin; width:9vmin; height:9vmin; font-size:1.8vmin; }
   #touchControls.active ~ #hud #topbar { top:15vmin; }
-
-  /* ==================== 改装菜单 ==================== */
   #upgradeMenu { position:fixed; inset:0; z-index:25; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:20px;
     background:radial-gradient(ellipse at center, rgba(10,18,30,.94), rgba(3,6,11,.985));
@@ -186,8 +178,6 @@
     cursor:pointer; font-family:inherit; font-weight:600;
     background:rgba(30,46,68,.9); color:#a5c8e8; border:1px solid rgba(90,160,220,.3); transition:.15s; }
   .btn-sm:hover { background:rgba(40,62,92,.95); color:#cfe8ff; }
-
-  /* ==================== 开始界面 ==================== */
   #overlay { position:fixed; inset:0; z-index:20; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:16px; text-align:center;
     background:radial-gradient(ellipse at center, rgba(12,22,38,.82), rgba(4,7,12,.96));
@@ -218,12 +208,30 @@
     cursor:pointer; font-family:inherit; transition:.15s; }
   .btn-toggle:hover { background:rgba(40,62,92,.9); border-color:rgba(140,210,255,.7); color:#cfe8ff; }
 
-  /* ==================== 返回 + 横屏提示 ==================== */
+  #weaponSelect {
+    display: flex; flex-direction: column; gap: 10px; margin: 16px 0;
+    padding: 14px 18px; border-radius: 12px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    width: 100%; max-width: 340px; pointer-events: auto;
+  }
+  .ws-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .ws-row label { font-size: 13px; color: #8fb4d6; letter-spacing: 2px; font-weight: 600; white-space: nowrap; }
+  .ws-row select {
+    padding: 6px 10px; border-radius: 8px; background: rgba(20,30,50,0.85);
+    border: 1px solid rgba(120,180,230,0.35); color: #cfe8ff;
+    font-family: inherit; font-size: 13px; outline: none; cursor: pointer; min-width: 130px;
+    touch-action: manipulation; -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fe9ff' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 8px center;
+    background-size: 14px; padding-right: 28px;
+  }
+  .ws-row select:focus { border-color: rgba(160,220,255,0.8); box-shadow: 0 0 10px rgba(80,180,255,0.3); }
+  .ws-row select option { background: #0b1020; color: #cfe8ff; }
+
   #backBtn {
     position: fixed; top: 14px; left: 14px; z-index: 100;
     padding: 8px 16px; border-radius: 10px;
-    background: rgba(10,16,26,.65);
-    border: 1px solid rgba(90,160,220,.35);
+    background: rgba(10,16,26,.65); border: 1px solid rgba(90,160,220,.35);
     color: #cfe8ff; font-size: 13px; font-weight: 600;
     cursor: pointer; font-family: inherit;
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -243,7 +251,6 @@
     60%, 100% { transform: rotate(-90deg); }
   }
 
-  /* ==================== 手机窄屏适配 ==================== */
   @media (max-width: 900px) {
     #overlay h1 { font-size:32px; letter-spacing:8px; }
     #keys, #keysTouch { font-size:11px; }
@@ -264,6 +271,9 @@
     #qte .label .key { font-size:12px; padding:0 7px 2px; }
     #qte .bar { width:120px; height:4px; }
     #backBtn { top: 8px; left: 8px; padding: 5px 10px; font-size: 10px; }
+    #weaponSelect { max-width: 280px; padding: 10px 14px; }
+    .ws-row label { font-size: 11px; letter-spacing: 1px; }
+    .ws-row select { font-size: 12px; min-width: 110px; padding: 5px 24px 5px 8px; }
   }
 </style>
 </head>
@@ -275,7 +285,6 @@
   <div class="txt">请横屏使用</div>
 </div>
 
-<!-- ==================== HUD ==================== -->
 <div id="hud">
   <div id="crosshair">
     <div class="bar h"></div><div class="bar v"></div><div class="dot"></div>
@@ -283,18 +292,18 @@
   <div id="redDot"></div>
   <div id="hitmark"><span></span><span></span><span></span><span></span></div>
   <div id="topbar">
-    <div class="stat"><span class="label">分数</span><span class="val" id="uiScore">0</span></div>
-<div class="stat"><span class="label">波次</span><span class="val" id="uiWave">1</span></div>
-<div class="stat"><span class="label">敌人</span><span class="val" id="uiLeft">0</span></div>
+    <div class="stat"><span class="label">SCORE</span><span class="val" id="uiScore">0</span></div>
+    <div class="stat"><span class="label">WAVE</span><span class="val" id="uiWave">1</span></div>
+    <div class="stat"><span class="label">ENEMY</span><span class="val" id="uiLeft">0</span></div>
   </div>
   <div id="bottomLeft">
     <div id="hpbar"><div id="hpfill"></div></div>
     <div id="hptext">100 / 100</div>
   </div>
   <div id="slots">
-    <div class="slot active" id="slot1">1 AR-15</div>
-    <div class="slot" id="slot2">2 AWP</div>
-    <div class="slot" id="slot3">3 GLOCK</div>
+    <div class="slot" id="slot1">1 主武器</div>
+    <div class="slot" id="slot2">2 副武器</div>
+    <div class="slot" id="slot3">3 刀</div>
   </div>
   <div id="bottomRight">
     <div id="weaponName">AR-15</div>
@@ -318,7 +327,6 @@
   <div id="damage"></div>
 </div>
 
-<!-- ==================== 触摸控件 ==================== -->
 <div id="touchControls">
   <div id="moveStick"><div id="moveStickKnob"></div></div>
   <div class="tb" id="btnFire">射击</div>
@@ -326,14 +334,13 @@
   <div class="tb" id="btnReload">换弹</div>
   <div class="tb" id="btnJump">跳跃</div>
   <div class="tb" id="btnParry">弹反</div>
-  <div class="tb" id="btnW1">AR</div>
-  <div class="tb" id="btnW2">AWP</div>
-  <div class="tb" id="btnW3">GLK</div>
+  <div class="tb" id="btnW1">主</div>
+  <div class="tb" id="btnW2">副</div>
+  <div class="tb" id="btnW3">刀</div>
   <div class="tb" id="btnUpgrade">改装</div>
   <div class="tb" id="btnPause">II</div>
 </div>
 
-<!-- ==================== 改装菜单 ==================== -->
 <div id="upgradeMenu" class="hidden">
   <div class="up-header">
     <h2>武器改装</h2>
@@ -344,24 +351,47 @@
   <button class="btn-sm" id="upClose">关闭 (B)</button>
 </div>
 
-<!-- ==================== 开始界面 ==================== -->
 <div id="overlay">
   <h1>ARENA FPS</h1>
   <h2 id="ovSub">3D 生存射击</h2>
   <div id="ovStats" style="display:none">
-  <div><span class="v" id="ovScore">0</span><span class="k">分数</span></div>
-  <div><span class="v" id="ovWave">1</span><span class="k">波次</span></div>
-  <div><span class="v" id="ovKills">0</span><span class="k">击杀</span></div>
+    <div><span class="v" id="ovScore">0</span><span class="k">SCORE</span></div>
+    <div><span class="v" id="ovWave">1</span><span class="k">WAVE</span></div>
+    <div><span class="v" id="ovKills">0</span><span class="k">KILLS</span></div>
   </div>
+
+  <div id="weaponSelect">
+    <div class="ws-row">
+      <label>主武器</label>
+      <select id="ws-primary">
+        <option value="rifle">AR-15</option>
+        <option value="sniper">AWP</option>
+      </select>
+    </div>
+    <div class="ws-row">
+      <label>副武器</label>
+      <select id="ws-secondary">
+        <option value="pistol">GLOCK-18</option>
+      </select>
+    </div>
+    <div class="ws-row">
+      <label>近战</label>
+      <select id="ws-melee">
+        <option value="butterfly">蝴蝶刀</option>
+        <option value="karambit">爪刀</option>
+      </select>
+    </div>
+  </div>
+
   <div id="keys">
     <b>W A S D</b><span>移动</span>
     <b>鼠标</b><span>瞄准</span>
-    <b>左键</b><span>射击</span>
+    <b>左键</b><span>射击 / 挥砍</span>
     <b>右键</b><span>开镜瞄准</span>
     <b>F</b><span>弹反（回血 15）</span>
     <b>Q / E</b><span>左 / 右偏头</span>
     <b>空格</b><span>跳跃</span>
-    <b>1 / 2 / 3</b><span>切换武器</span>
+    <b>1 / 2 / 3</b><span>主 / 副 / 刀</span>
     <b>B</b><span>武器改装</span>
     <b>R</b><span>换弹</span>
     <b>Shift</b><span>冲刺</span>
@@ -374,7 +404,7 @@
     <b>开镜键</b><span>开镜瞄准</span>
     <b>弹反键</b><span>弹反（回血 15）</span>
     <b>跳跃键</b><span>跳跃</span>
-    <b>顶部 AR/AWP/GLK</b><span>切换武器</span>
+    <b>顶部 主/副/刀</b><span>切换武器</span>
     <b>顶部改装</b><span>武器改装</span>
     <b>换弹键</b><span>换弹</span>
     <b>暂停键</b><span>暂停</span>
@@ -385,7 +415,6 @@
 
 <script type="module">
 import * as THREE from '/three.module.js';
-
 /* ============================================================
    0. 设备检测 + 控制模式
    ============================================================ */
@@ -398,46 +427,6 @@ let controlMode = (() => {
     if (saved === 'touch' || saved === 'keyboard' || saved === 'auto') return saved;
   } catch(e) {}
   return 'auto';
-  /* ===== iOS Safari 终极兜底：整个 overlay 都可点 ===== */
-(function bindOverlayTouch() {
-  if (!overlay) return;
-  overlay.addEventListener('touchstart', function (e) {
-    const t = e.target;
-    // 点到"控制模式"按钮 → 切换模式
-    if (t && (t.id === 'ctrlToggle' || (t.closest && t.closest('#ctrlToggle')))) {
-      e.preventDefault();
-      e.stopPropagation();
-      cycleControlMode();
-      return;
-    }
-    // 其他任何位置 → 开始游戏 / 继续
-    e.preventDefault();
-    e.stopPropagation();
-    if (state === 'menu' || state === 'dead') {
-      startGame();
-    } else if (state === 'paused') {
-      resumeGame();
-    }
-  }, { passive: false });
-
-  // 电脑鼠标点击也支持
-  overlay.addEventListener('click', function (e) {
-    const t = e.target;
-    if (t && (t.id === 'ctrlToggle' || (t.closest && t.closest('#ctrlToggle')))) {
-      e.preventDefault();
-      e.stopPropagation();
-      cycleControlMode();
-      return;
-    }
-    if (state === 'menu' || state === 'dead') {
-      e.preventDefault();
-      startGame();
-    } else if (state === 'paused') {
-      e.preventDefault();
-      resumeGame();
-    }
-  });
-})();
 })();
 
 let useTouch = false;
@@ -458,6 +447,8 @@ const QTE_RANGE = 3.2;
 const QTE_COOLDOWN = 0.9;
 const QTE_DOT_MIN = 0.65;
 const PARRY_HEAL = 15;
+
+const SWITCH_ANIM_DURATION = 0.45;
 
 /* ============================================================
    2. 渲染器 / 场景 / 相机
@@ -530,9 +521,83 @@ const BASE_WEAPONS = {
     basePos: new THREE.Vector3(0.15, -0.15, -0.30),
     adsPos:  new THREE.Vector3(0.00, -0.059, -0.18),
     adsFov: 56, adsSpreadMul: 0.70, scopeType: 'iron', suppressor: false
+  },
+  butterfly: {
+    key: 'butterfly', slot: 4, name: '蝴蝶刀',
+    auto: false, damage: 35, fireRate: 0.32,
+    magSize: 1, reloadTime: 999,
+    spreadBase: 0, spreadAdd: 0,
+    recoilPitch: 0.008, recoilKick: 0.35,
+    basePos: new THREE.Vector3(0.22, -0.20, -0.32),
+    adsPos:  new THREE.Vector3(0.22, -0.20, -0.32),
+    adsFov: 78, adsSpreadMul: 1,
+    scopeType: 'none', suppressor: false,
+    isMelee: true, meleeRange: 2.2
+  },
+  karambit: {
+    key: 'karambit', slot: 5, name: '爪刀',
+    auto: false, damage: 55, fireRate: 0.55,
+    magSize: 1, reloadTime: 999,
+    spreadBase: 0, spreadAdd: 0,
+    recoilPitch: 0.015, recoilKick: 0.6,
+    basePos: new THREE.Vector3(0.20, -0.20, -0.30),
+    adsPos:  new THREE.Vector3(0.20, -0.20, -0.30),
+    adsFov: 78, adsSpreadMul: 1,
+    scopeType: 'none', suppressor: false,
+    isMelee: true, meleeRange: 2.0
   }
 };
-const WEAPON_ORDER = ['rifle', 'sniper', 'pistol'];
+const WEAPON_ORDER = ['rifle', 'sniper', 'pistol', 'butterfly', 'karambit'];
+
+const WEAPON_CATEGORIES = {
+  primary:   ['rifle', 'sniper'],
+  secondary: ['pistol'],
+  melee:     ['butterfly', 'karambit'],
+};
+
+let selectedWeapons = {
+  primary: 'rifle',
+  secondary: 'pistol',
+  melee: 'butterfly',
+};
+
+function loadWeaponSelection() {
+  try {
+    const saved = localStorage.getItem('arena_weapons');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.primary && WEAPON_CATEGORIES.primary.includes(parsed.primary)) {
+        selectedWeapons.primary = parsed.primary;
+      }
+      if (parsed.secondary && WEAPON_CATEGORIES.secondary.includes(parsed.secondary)) {
+        selectedWeapons.secondary = parsed.secondary;
+      }
+      if (parsed.melee && WEAPON_CATEGORIES.melee.includes(parsed.melee)) {
+        selectedWeapons.melee = parsed.melee;
+      }
+    }
+  } catch {}
+}
+function saveWeaponSelection() {
+  try { localStorage.setItem('arena_weapons', JSON.stringify(selectedWeapons)); } catch {}
+}
+function syncWeaponSelectionFromUI() {
+  const p = document.getElementById('ws-primary');
+  const s = document.getElementById('ws-secondary');
+  const m = document.getElementById('ws-melee');
+  if (p) selectedWeapons.primary = p.value;
+  if (s) selectedWeapons.secondary = s.value;
+  if (m) selectedWeapons.melee = m.value;
+  saveWeaponSelection();
+}
+function syncWeaponSelectionToUI() {
+  const p = document.getElementById('ws-primary');
+  const s = document.getElementById('ws-secondary');
+  const m = document.getElementById('ws-melee');
+  if (p) p.value = selectedWeapons.primary;
+  if (s) s.value = selectedWeapons.secondary;
+  if (m) m.value = selectedWeapons.melee;
+}
 
 const ATTACHMENTS = {
   rifle: [
@@ -568,8 +633,8 @@ function rebuildWeapons() {
     const w = Object.assign({}, BASE_WEAPONS[k]);
     w.basePos = BASE_WEAPONS[k].basePos.clone();
     w.adsPos  = BASE_WEAPONS[k].adsPos.clone();
-    for (const id of upgrades[k]) {
-      const att = ATTACHMENTS[k].find(a => a.id === id);
+    for (const id of upgrades[k] || []) {
+      const att = (ATTACHMENTS[k] || []).find(a => a.id === id);
       if (att) att.apply(w);
     }
     WEAPONS[k] = w;
@@ -588,6 +653,7 @@ let adsAmt = 0;
 let semiLatch = false;
 let burstRemaining = 0;
 let burstTimer = 0;
+let switchAnimTimer = 0;
 
 /* ============================================================
    4. 世界构建
@@ -905,9 +971,71 @@ function buildPistolModel() {
   return { group: g, muzzle: muzzleObj, irons, redDotScope, suppressor };
 }
 
-gunGroups.rifle  = buildRifleModel();
-gunGroups.sniper = buildSniperModel();
-gunGroups.pistol = buildPistolModel();
+function buildButterflyModel() {
+  const g = new THREE.Group();
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, roughness: 0.15, metalness: 0.95 });
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.6, metalness: 0.4 });
+  const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x223344, emissiveIntensity: 0.3 });
+  const handleGeo = new THREE.BoxGeometry(0.03, 0.055, 0.16);
+  const handleL = new THREE.Mesh(handleGeo, handleMat);
+  handleL.position.set(-0.018, -0.14, 0.02); g.add(handleL);
+  const handleR = new THREE.Mesh(handleGeo, handleMat);
+  handleR.position.set(0.018, -0.14, 0.02); g.add(handleR);
+  const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.04, 8).rotateZ(Math.PI / 2), edgeMat);
+  pivot.position.set(0, -0.12, -0.06); g.add(pivot);
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.03, 0.28), bladeMat);
+  blade.position.set(0, -0.10, -0.24); g.add(blade);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.06, 6).rotateX(-Math.PI / 2), bladeMat);
+  tip.position.set(0, -0.10, -0.40); g.add(tip);
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(0.002, 0.004, 0.30), edgeMat);
+  edge.position.set(0.005, -0.10, -0.24); g.add(edge);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, 0.08), handleMat);
+  tail.position.set(0, -0.12, 0.10); g.add(tail);
+  const muzzleObj = new THREE.Object3D();
+  muzzleObj.position.set(0, -0.10, -0.45); g.add(muzzleObj);
+  return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
+}
+
+function buildKarambitModel() {
+  const g = new THREE.Group();
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xb8c0cc, roughness: 0.12, metalness: 0.98 });
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1f2226, roughness: 0.55, metalness: 0.45 });
+  const ringMat = new THREE.MeshStandardMaterial({ color: 0x0d0f12, roughness: 0.4, metalness: 0.9 });
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.05, 0.14), handleMat);
+  handle.position.set(0, -0.13, 0.05); g.add(handle);
+  const fingerRing = new THREE.Mesh(new THREE.TorusGeometry(0.030, 0.007, 8, 16), ringMat);
+  fingerRing.position.set(0, -0.13, 0.14);
+  fingerRing.rotation.y = Math.PI / 2;
+  g.add(fingerRing);
+  const curvePts = [
+    { x: 0.0,  y: -0.11, z: -0.02, rot: 0.0 },
+    { x: 0.01, y: -0.095, z: -0.08, rot: 0.25 },
+    { x: 0.02, y: -0.070, z: -0.13, rot: 0.55 },
+    { x: 0.025, y: -0.040, z: -0.17, rot: 0.9 },
+    { x: 0.02, y: -0.005, z: -0.19, rot: 1.3 },
+  ];
+  curvePts.forEach((p, i) => {
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.022 - i * 0.002, 0.06), bladeMat);
+    seg.position.set(p.x, p.y, p.z);
+    seg.rotation.x = p.rot;
+    g.add(seg);
+  });
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.01, 0.05, 6).rotateX(-Math.PI / 2), bladeMat);
+  tip.position.set(0.018, 0.025, -0.21);
+  tip.rotation.x = 1.6;
+  g.add(tip);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.05), handleMat);
+  base.position.set(0, -0.11, -0.04); g.add(base);
+  const muzzleObj = new THREE.Object3D();
+  muzzleObj.position.set(0.02, 0.02, -0.25); g.add(muzzleObj);
+  return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
+}
+
+gunGroups.rifle     = buildRifleModel();
+gunGroups.sniper    = buildSniperModel();
+gunGroups.pistol    = buildPistolModel();
+gunGroups.butterfly = buildButterflyModel();
+gunGroups.karambit  = buildKarambitModel();
 
 for (const k in gunGroups) {
   gunGroups[k].group.position.copy(WEAPONS[k].basePos);
@@ -920,7 +1048,9 @@ camera.add(muzzleLight);
 const MUZZLE_LIGHT_POS = {
   rifle:  new THREE.Vector3(0.16, -0.14, -1.0),
   sniper: new THREE.Vector3(0.15, -0.13, -1.45),
-  pistol: new THREE.Vector3(0.15, -0.13, -0.55)
+  pistol: new THREE.Vector3(0.15, -0.13, -0.55),
+  butterfly: new THREE.Vector3(0.22, -0.10, -0.55),
+  karambit: new THREE.Vector3(0.20, 0.00, -0.45)
 };
 muzzleLight.position.copy(MUZZLE_LIGHT_POS[curWeapon]);
 
@@ -1404,7 +1534,7 @@ function tryParry() {
 }
 
 /* ============================================================
-   11. 射击 / 伤害 / 换弹
+   11. 射击 / 近战 / 伤害 / 换弹
    ============================================================ */
 function playShootSound() {
   const Wp = WEAPONS[curWeapon];
@@ -1414,10 +1544,44 @@ function playShootSound() {
   else sup ? sfx.shootRifleSup() : sfx.shootRifle();
 }
 
+function meleeAttack() {
+  if (state !== 'playing') return false;
+  const Wp = WEAPONS[curWeapon];
+  if (!Wp.isMelee) return false;
+  if (fireTimer > 0) return false;
+
+  fireTimer = Wp.fireRate;
+  recoilVis = Math.min(3.2, recoilVis + 2.5);
+  camRecoilPitch += Wp.recoilPitch * 2;
+  camRecoilYaw += (Math.random() - 0.5) * 0.02;
+
+  if (actx) {
+    noiseBurst(0.08, 4500, 0.12, 3);
+    tone(800, 200, 0.08, 0.05, 'sawtooth');
+  }
+
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  raycaster.far = Wp.meleeRange;
+  const hits = raycaster.intersectObjects(hittables, true);
+
+  if (hits.length > 0) {
+    const h = hits[0];
+    const enemy = findOwnerEnemy(h.object);
+    if (enemy && !enemy.dead) {
+      damageEnemy(enemy, Wp.damage, h.point);
+      hitmarkT = 0.2;
+    } else {
+      spawnSpark(h.point, h.face ? h.face.normal : null);
+    }
+  }
+  return true;
+}
+
 function shoot() {
   if (state !== 'playing') return false;
   const Wp = WEAPONS[curWeapon];
   const st = weaponState[curWeapon];
+  if (Wp.isMelee) return meleeAttack();
   if (st.reloading) return false;
   if (st.ammo <= 0) { sfx.empty(); startReload(); return false; }
   st.ammo--;
@@ -1468,7 +1632,7 @@ function damageEnemy(e, amount, point) {
   if (e.hp <= 0) {
     e.dead = true; e.deadT = 0;
     e.bodyMat.emissive.setRGB(0.15, 0, 0);
-    score += (curWeapon === 'sniper') ? 150 : 100;
+    score += (curWeapon === 'sniper') ? 150 : (WEAPONS[curWeapon].isMelee ? 80 : 100);
     kills++; sfx.kill();
   } else { sfx.hit(); }
   updateHUD();
@@ -1485,6 +1649,7 @@ function damagePlayer(amount) {
 
 function startReload() {
   if (state !== 'playing') return;
+  if (WEAPONS[curWeapon].isMelee) return;
   const Wp = WEAPONS[curWeapon];
   const st = weaponState[curWeapon];
   if (st.reloading || st.ammo === Wp.magSize) return;
@@ -1508,20 +1673,52 @@ function updateReload(dt) {
 function switchWeapon(key) {
   if (state !== 'playing') return;
   if (!WEAPONS[key] || key === curWeapon) return;
-  if (weaponState[curWeapon].reloading) return;
+  if (weaponState[curWeapon] && weaponState[curWeapon].reloading) return;
   curWeapon = key;
+  switchAnimTimer = SWITCH_ANIM_DURATION;
+  if (WEAPONS[key] && WEAPONS[key].isMelee) {
+    if (actx) {
+      noiseBurst(0.12, 5500, 0.14, 4);
+      tone(1200, 2400, 0.1, 0.06, 'sawtooth');
+    }
+  } else {
+    sfx.swap();
+  }
   spread = 0; recoilVis = 0;
   fireTimer = 0.18;
   semiLatch = false; burstRemaining = 0;
   aiming = false; adsAmt = 0;
   muzzleLight.position.copy(MUZZLE_LIGHT_POS[curWeapon]);
-  sfx.swap();
   updateHUD();
   updateTouchWeaponButtons();
 }
 
+function getWeaponCategory(weaponKey) {
+  for (const cat in WEAPON_CATEGORIES) {
+    if (WEAPON_CATEGORIES[cat].includes(weaponKey)) return cat;
+  }
+  return null;
+}
+
+function switchCategory(category) {
+  if (state !== 'playing') return;
+  const list = WEAPON_CATEGORIES[category];
+  if (!list || list.length === 0) return;
+  const selected = selectedWeapons[category];
+  if (selected && list.includes(selected)) {
+    if (curWeapon !== selected) {
+      switchWeapon(selected);
+      return;
+    }
+  }
+  const idx = list.indexOf(curWeapon);
+  const nextKey = idx >= 0 ? list[(idx + 1) % list.length] : list[0];
+  switchWeapon(nextKey);
+}
+
 function setAiming(on) {
   if (state !== 'playing') { aiming = false; return; }
+  if (WEAPONS[curWeapon].isMelee) { aiming = false; return; }
   if (on && !aiming) sfx.adsIn();
   aiming = on;
 }
@@ -1549,6 +1746,7 @@ function aliveCount() {
 
 function refillAllAmmo() {
   for (const k in WEAPONS) {
+    if (WEAPONS[k].isMelee) continue;
     weaponState[k].ammo = WEAPONS[k].magSize;
     weaponState[k].reloading = false;
     weaponState[k].reloadTimer = 0;
@@ -1561,7 +1759,7 @@ function startWave() {
   spawnTimer = 0;
   if (wave > 1) player.hp = Math.min(player.maxHp, player.hp + 18);
   refillAllAmmo();
-  showWaveMsg('第 ' + wave + ' 波');
+  showWaveMsg('WAVE ' + wave);
   sfx.wave();
   updateHUD();
 }
@@ -1603,6 +1801,7 @@ function updatePlayer(dt) {
   const len = Math.hypot(wx, wz);
   if (len > 1) { wx /= len; wz /= len; }
   let maxSpeed = (keys['ShiftLeft'] || keys['ShiftRight']) ? 8.6 : 6.1;
+  if (WEAPONS[curWeapon].isMelee) maxSpeed *= 1.18;
   maxSpeed *= (1 - adsAmt * 0.55);
   maxSpeed *= (1 - Math.abs(player.lean) * 0.35);
   const accel = player.grounded ? 16 : 6;
@@ -1649,8 +1848,14 @@ function updatePlayer(dt) {
       burstTimer = Wp.burstDelay || 0.055;
     }
   } else if (mouseDown && fireTimer <= 0) {
-    if (Wp.auto) { shoot(); fireTimer = Wp.fireRate; }
-    else if (!semiLatch) {
+    if (Wp.isMelee) {
+      if (!semiLatch) {
+        meleeAttack();
+        semiLatch = true;
+      }
+    } else if (Wp.auto) {
+      shoot(); fireTimer = Wp.fireRate;
+    } else if (!semiLatch) {
       if (Wp.burst) { burstRemaining = Wp.burstCount || 3; burstTimer = 0; }
       else { shoot(); }
       semiLatch = true;
@@ -1660,7 +1865,7 @@ function updatePlayer(dt) {
   spread = Math.max(0, spread - dt * 2.6);
   updateReload(dt);
   const st = weaponState[curWeapon];
-  if (st.ammo === 0 && !st.reloading) startReload();
+  if (!Wp.isMelee && st.ammo === 0 && !st.reloading) startReload();
 }
 
 function updateCamera(dt) {
@@ -1714,14 +1919,59 @@ function updateWeapon(dt) {
   const tx = baseX + Math.cos(t * 4.2) * 0.007 * sway;
   const ty = baseY + Math.sin(t * 8.4) * 0.006 * sway - reloadDip * 0.13;
   const tz = baseZ + reloadDip * 0.05 + recoilVis * 0.055 * (1 - adsAmt * 0.5);
+
+  let animOffX = 0, animOffY = 0, animOffZ = 0;
+  let animRotX = 0, animRotY = 0, animRotZ = 0;
+
+  if (switchAnimTimer > 0) {
+    switchAnimTimer -= dt;
+    if (switchAnimTimer < 0) switchAnimTimer = 0;
+    const progress = 1 - (switchAnimTimer / SWITCH_ANIM_DURATION);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const inv = 1 - eased;
+
+    if (Wp.isMelee) {
+      if (curWeapon === 'butterfly') {
+        const spin = 1 - eased;
+        animRotZ = -Math.PI * 4 * spin;
+        animRotY = Math.PI * 1 * spin;
+        animRotX = inv * 0.45;
+        animOffX = inv * 0.28;
+        animOffY = inv * -0.50;
+        animOffZ = inv * 0.22;
+      } else if (curWeapon === 'karambit') {
+        const spin = 1 - eased;
+        animRotY = Math.PI * 2 * spin;
+        animRotZ = -Math.PI * 0.7 * spin;
+        animRotX = inv * 0.35;
+        animOffX = inv * 0.45;
+        animOffY = inv * -0.45;
+        animOffZ = inv * 0.25;
+      } else {
+        animOffX = inv * 0.55;
+        animOffY = inv * -0.65;
+        animOffZ = inv * 0.25;
+        animRotZ = inv * -1.8;
+        animRotX = inv * 0.6;
+        animRotY = inv * 0.5;
+      }
+    } else {
+      animOffY = inv * -0.35;
+      animOffZ = inv * 0.18;
+      animRotX = inv * -0.35;
+    }
+  }
+
   const g = gunGroups[curWeapon].group;
   const k = 1 - Math.exp(-20 * dt);
-  g.position.x += (tx - g.position.x) * k;
-  g.position.y += (ty + recoilVis * 0.018 * (1 - adsAmt * 0.4) - g.position.y) * k;
-  g.position.z += (tz - g.position.z) * k;
-  g.rotation.x = -recoilVis * 0.22 * (1 - adsAmt * 0.5) + reloadDip * 0.5;
-  g.rotation.z = Math.sin(t * 4.2) * 0.012 * sway + reloadDip * 0.2;
+  g.position.x += (tx + animOffX - g.position.x) * k;
+  g.position.y += (ty + recoilVis * 0.018 * (1 - adsAmt * 0.4) + animOffY - g.position.y) * k;
+  g.position.z += (tz + animOffZ - g.position.z) * k;
+  g.rotation.x = -recoilVis * 0.22 * (1 - adsAmt * 0.5) + reloadDip * 0.5 + animRotX;
+  g.rotation.y = animRotY;
+  g.rotation.z = Math.sin(t * 4.2) * 0.012 * sway + reloadDip * 0.2 + animRotZ;
   recoilVis *= Math.exp(-dt * 11);
+
   for (const kk in gunGroups) {
     const isCur = (kk === curWeapon);
     const Wk = WEAPONS[kk];
@@ -1731,7 +1981,7 @@ function updateWeapon(dt) {
     if (parts.irons) for (const m of parts.irons) m.visible = !hasRedDot;
     if (parts.redDotScope) parts.redDotScope.visible = hasRedDot;
     if (parts.suppressor) parts.suppressor.visible = hasSupp;
-    if (parts.muzzle) {
+    if (parts.muzzle && SUPPRESSOR_PARAMS[kk]) {
       const p = SUPPRESSOR_PARAMS[kk];
       parts.muzzle.position.z = hasSupp ? p.muzzleZ : (
         kk === 'rifle' ? -0.72 : kk === 'sniper' ? -1.13 : -0.31
@@ -1759,9 +2009,9 @@ const crosshairEl = document.getElementById('crosshair');
 const redDotEl = document.getElementById('redDot');
 const scopeEl = document.getElementById('scope');
 const slotEls = {
-  rifle: document.getElementById('slot1'),
-  sniper: document.getElementById('slot2'),
-  pistol: document.getElementById('slot3')
+  primary: document.getElementById('slot1'),
+  secondary: document.getElementById('slot2'),
+  melee: document.getElementById('slot3')
 };
 const overlay = document.getElementById('overlay');
 const ovBtn = document.getElementById('ovBtn');
@@ -1786,9 +2036,17 @@ function updateHUD() {
   const Wp = WEAPONS[curWeapon];
   const st = weaponState[curWeapon];
   weaponNameEl.textContent = Wp.name;
-  ammoEl.innerHTML = st.ammo + '<small> / ' + Wp.magSize + '</small>';
-  reloadHint.textContent = st.reloading ? '换弹中…' : (st.ammo === 0 ? '按 R 换弹' : '');
-  for (const k in slotEls) slotEls[k].classList.toggle('active', k === curWeapon);
+  if (Wp.isMelee) {
+    ammoEl.innerHTML = '⚔️';
+    reloadHint.textContent = '';
+  } else {
+    ammoEl.innerHTML = st.ammo + '<small> / ' + Wp.magSize + '</small>';
+    reloadHint.textContent = st.reloading ? '换弹中…' : (st.ammo === 0 ? '按 R 换弹' : '');
+  }
+  const currentCat = getWeaponCategory(curWeapon);
+  for (const k in slotEls) {
+    if (slotEls[k]) slotEls[k].classList.toggle('active', k === currentCat);
+  }
 }
 
 /* ============================================================
@@ -1813,7 +2071,7 @@ function openUpgradeMenu() {
   touchLeft.id = null;
   touchMoveVec.x = 0; touchMoveVec.y = 0;
   if (typeof updateMoveStick === 'function') updateMoveStick();
-  upgradeTab = curWeapon;
+  upgradeTab = WEAPONS[curWeapon].isMelee ? 'rifle' : curWeapon;
   renderUpgradeMenu();
   upgradeMenuEl.classList.remove('hidden');
   document.exitPointerLock?.();
@@ -1831,6 +2089,7 @@ function renderUpgradeMenu() {
   upScoreEl.textContent = score;
   upTabsEl.innerHTML = '';
   for (const k of WEAPON_ORDER) {
+    if (WEAPONS[k].isMelee) continue;
     const btn = document.createElement('button');
     btn.textContent = WEAPONS[k].name;
     if (k === upgradeTab) btn.className = 'active';
@@ -1839,8 +2098,8 @@ function renderUpgradeMenu() {
   }
   upBodyEl.innerHTML = '';
   const k = upgradeTab;
-  for (const att of ATTACHMENTS[k]) {
-    const owned = upgrades[k].includes(att.id);
+  for (const att of (ATTACHMENTS[k] || [])) {
+    const owned = (upgrades[k] || []).includes(att.id);
     const canAfford = score >= att.cost;
     const card = document.createElement('div');
     card.className = 'up-card' + (owned ? ' owned' : '');
@@ -1861,11 +2120,12 @@ function renderUpgradeMenu() {
 }
 
 function buyUpgrade(weaponKey, attId) {
-  const att = ATTACHMENTS[weaponKey].find(a => a.id === attId);
+  const att = (ATTACHMENTS[weaponKey] || []).find(a => a.id === attId);
   if (!att) return;
-  if (upgrades[weaponKey].includes(attId)) return;
+  if ((upgrades[weaponKey] || []).includes(attId)) return;
   if (score < att.cost) return;
   score -= att.cost;
+  if (!upgrades[weaponKey]) upgrades[weaponKey] = [];
   upgrades[weaponKey].push(attId);
   rebuildWeapons();
   const st = weaponState[weaponKey];
@@ -1941,9 +2201,11 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.code === 'KeyF' && qteActive) { tryParry(); e.preventDefault(); return; }
   if (e.code === 'KeyR') startReload();
-  if (e.code === 'Digit1') switchWeapon('rifle');
-  if (e.code === 'Digit2') switchWeapon('sniper');
-  if (e.code === 'Digit3') switchWeapon('pistol');
+  if (e.code === 'Digit1') switchCategory('primary');
+  if (e.code === 'Digit2') switchCategory('secondary');
+  if (e.code === 'Digit3') switchCategory('melee');
+  if (e.code === 'Digit4') switchWeapon('butterfly');
+  if (e.code === 'Digit5') switchWeapon('karambit');
   if (e.code === 'KeyB' && state === 'playing') openUpgradeMenu();
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
 });
@@ -2047,9 +2309,10 @@ function updateMoveStick() {
 
 function updateTouchWeaponButtons() {
   if (!btnW1) return;
-  btnW1.classList.toggle('active', curWeapon === 'rifle');
-  btnW2.classList.toggle('active', curWeapon === 'sniper');
-  btnW3.classList.toggle('active', curWeapon === 'pistol');
+  const cat = getWeaponCategory(curWeapon);
+  btnW1.classList.toggle('active', cat === 'primary');
+  btnW2.classList.toggle('active', cat === 'secondary');
+  btnW3.classList.toggle('active', cat === 'melee');
 }
 
 function onTouchStart(e) {
@@ -2127,6 +2390,7 @@ document.addEventListener('touchend', onTouchEnd, { passive: false });
 document.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
 function bindHoldButton(el, onDown, onUp) {
+  if (!el) return;
   const down = (e) => { e.preventDefault(); e.stopPropagation(); el.classList.add('pressed'); onDown && onDown(); };
   const up = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } el.classList.remove('pressed'); onUp && onUp(); };
   el.addEventListener('touchstart', down, { passive: false });
@@ -2135,6 +2399,7 @@ function bindHoldButton(el, onDown, onUp) {
 }
 
 function bindTapButton(el, onTap) {
+  if (!el) return;
   el.addEventListener('touchstart', (e) => {
     e.preventDefault(); e.stopPropagation();
     el.classList.add('pressed');
@@ -2148,9 +2413,9 @@ bindHoldButton(btnAim, () => { setAiming(true); }, () => { setAiming(false); });
 bindTapButton(btnReload, () => { startReload(); });
 bindHoldButton(btnJump, () => { keys['Space'] = true; }, () => { keys['Space'] = false; });
 bindTapButton(btnParry, () => { tryParry(); });
-bindTapButton(btnW1, () => { switchWeapon('rifle'); });
-bindTapButton(btnW2, () => { switchWeapon('sniper'); });
-bindTapButton(btnW3, () => { switchWeapon('pistol'); });
+bindTapButton(btnW1, () => { switchCategory('primary'); });
+bindTapButton(btnW2, () => { switchCategory('secondary'); });
+bindTapButton(btnW3, () => { switchCategory('melee'); });
 bindTapButton(btnUpgrade, () => { openUpgradeMenu(); });
 bindTapButton(btnPause, () => {
   if (state === 'playing') {
@@ -2170,7 +2435,6 @@ bindTapButton(btnPause, () => {
   const stick = document.getElementById('moveStick');
   const knob = document.getElementById('moveStickKnob');
   if (!stick) return;
-
   function setStick(clientX, clientY) {
     const rect = stick.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
@@ -2184,14 +2448,12 @@ bindTapButton(btnPause, () => {
     touchMoveVec.x = dx / maxR;
     touchMoveVec.y = dy / maxR;
   }
-
   function resetStick() {
     knob.style.transform = 'translate(-50%,-50%)';
     touchMoveVec.x = 0;
     touchMoveVec.y = 0;
     touchLeft.id = null;
   }
-
   stick.addEventListener('touchstart', function (e) {
     e.preventDefault(); e.stopPropagation();
     const t = e.changedTouches[0];
@@ -2200,7 +2462,6 @@ bindTapButton(btnPause, () => {
     touchLeft.curY = t.clientY;
     setStick(t.clientX, t.clientY);
   }, { passive: false });
-
   stick.addEventListener('touchmove', function (e) {
     e.preventDefault(); e.stopPropagation();
     for (let i = 0; i < e.changedTouches.length; i++) {
@@ -2208,14 +2469,12 @@ bindTapButton(btnPause, () => {
       if (t.identifier === touchLeft.id) setStick(t.clientX, t.clientY);
     }
   }, { passive: false });
-
   stick.addEventListener('touchend', function (e) {
     e.preventDefault(); e.stopPropagation();
     for (let i = 0; i < e.changedTouches.length; i++) {
       if (e.changedTouches[i].identifier === touchLeft.id) resetStick();
     }
   }, { passive: false });
-
   stick.addEventListener('touchcancel', function (e) { resetStick(); }, { passive: false });
 })();
 
@@ -2238,6 +2497,7 @@ function showOverlay(title, sub, btnText, showStats = false) {
 function hideOverlay() { overlay.classList.add('hidden'); }
 
 function resetGame() {
+  syncWeaponSelectionFromUI();
   for (let i = enemies.length - 1; i >= 0; i--) removeEnemy(enemies[i]);
   for (const b of bullets) scene.remove(b.mesh);
   bullets.length = 0;
@@ -2287,11 +2547,12 @@ function resetGame() {
   touchLook.id = null;
   touchMoveVec.x = 0; touchMoveVec.y = 0;
   updateMoveStick();
-  curWeapon = 'rifle';
+  curWeapon = selectedWeapons.primary;
   camera.fov = BASE_FOV;
   camera.updateProjectionMatrix();
-  muzzleLight.position.copy(MUZZLE_LIGHT_POS[curWeapon]);
+  muzzleLight.position.copy(MUZZLE_LIGHT_POS[curWeapon] || MUZZLE_LIGHT_POS.rifle);
   for (const k in BASE_WEAPONS) {
+    if (WEAPONS[k].isMelee) continue;
     weaponState[k].ammo = WEAPONS[k].magSize;
     weaponState[k].reloading = false;
     weaponState[k].reloadTimer = 0;
@@ -2303,7 +2564,7 @@ function resetGame() {
     if (parts.irons) for (const m of parts.irons) m.visible = true;
     if (parts.redDotScope) parts.redDotScope.visible = false;
     if (parts.suppressor) parts.suppressor.visible = false;
-    if (parts.muzzle) {
+    if (parts.muzzle && SUPPRESSOR_PARAMS[k]) {
       parts.muzzle.position.z = k === 'rifle' ? -0.72 : k === 'sniper' ? -1.13 : -0.31;
     }
   }
@@ -2314,8 +2575,10 @@ function resetGame() {
 }
 
 function startGame() {
+  syncWeaponSelectionFromUI();
   ensureAudio();
   resetGame();
+  switchAnimTimer = SWITCH_ANIM_DURATION;
   state = 'playing';
   hideOverlay();
   if (!useTouch) renderer.domElement.requestPointerLock();
@@ -2341,7 +2604,6 @@ function gameOver() {
   document.exitPointerLock?.();
   showOverlay('任务失败', '你被击倒了', '再来一局', true);
 
-  // ===== 提交分数到排行榜 =====
   try {
     const playerName = localStorage.getItem('player_name') || '匿名玩家';
     fetch('/api/scores', {
@@ -2391,7 +2653,7 @@ function loop(now) {
     redDotEl.style.opacity = adsAmt > 0.6 ? (adsAmt - 0.6) / 0.4 : 0;
   } else {
     scopeEl.style.opacity = 0;
-    crosshairEl.style.opacity = 1 - adsAmt;
+    crosshairEl.style.opacity = Wp.isMelee ? 0 : (1 - adsAmt);
     redDotEl.style.opacity = 0;
   }
 
@@ -2446,7 +2708,7 @@ window.addEventListener('resize', checkOrientation);
 window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 200));
 
 /* ============================================================
-   23. 开始界面按钮（多事件兜底）
+   23. 开始界面按钮
    ============================================================ */
 function handleStartBtn(e) {
   if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -2466,13 +2728,19 @@ ctrlBtn.addEventListener('click', handleCtrlBtn);
 ctrlBtn.addEventListener('touchend', handleCtrlBtn, { passive: false });
 ctrlBtn.addEventListener('pointerup', handleCtrlBtn);
 
-// 暴露给内联属性
-window.__startGame = function () { handleStartBtn(); };
-window.__toggleCtrl = function () { handleCtrlBtn(); };
-
 /* ============================================================
    24. 初始化
    ============================================================ */
+loadWeaponSelection();
+syncWeaponSelectionToUI();
+
+['ws-primary', 'ws-secondary', 'ws-melee'].forEach((id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', () => { syncWeaponSelectionFromUI(); });
+  }
+});
+
 applyControlMode();
 updateHUD();
 updateTouchWeaponButtons();
