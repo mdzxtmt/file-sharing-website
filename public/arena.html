@@ -44,7 +44,7 @@
   #ammo small { font-size:16px; color:#6b87a8; font-weight:500; }
   #reloadHint { margin-top:4px; font-size:12px; letter-spacing:2px; color:#ffb547; height:16px; }
   #upgradeHint { margin-top:2px; font-size:11px; letter-spacing:2px; color:#5f7fa3; }
-  #slots { position:absolute; right:30px; bottom:126px; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; max-width:420px; }
+  #slots { position:absolute; right:30px; bottom:126px; display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; max-width:420px; }
   .slot { padding:4px 9px; border-radius:6px; font-size:11px; letter-spacing:1px;
     background:rgba(10,16,26,.5); border:1px solid rgba(90,160,220,.22); color:#5f7fa3; }
   .slot.active { color:#04121c; background:linear-gradient(180deg,#8fe9ff,#28b6e8);
@@ -178,10 +178,19 @@
     cursor:pointer; font-family:inherit; font-weight:600;
     background:rgba(30,46,68,.9); color:#a5c8e8; border:1px solid rgba(90,160,220,.3); transition:.15s; }
   .btn-sm:hover { background:rgba(40,62,92,.95); color:#cfe8ff; }
-  #overlay { position:fixed; inset:0; z-index:20; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:16px; text-align:center;
-    background:radial-gradient(ellipse at center, rgba(12,22,38,.82), rgba(4,7,12,.96));
-    backdrop-filter:blur(7px); padding:16px; overflow-y:auto; }
+  #overlay {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    text-align: center;
+    background: radial-gradient(ellipse at center, rgba(12,22,38,.82), rgba(4,7,12,.96));
+    backdrop-filter: blur(7px);
+    padding: 30px 16px 60px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   #overlay.hidden { display:none; }
   #overlay h1 { font-size:52px; letter-spacing:14px; font-weight:800;
     background:linear-gradient(180deg,#d6f6ff,#3fa9e0); -webkit-background-clip:text;
@@ -195,10 +204,23 @@
     grid-template-columns:auto auto; gap:6px 20px;
     font-size:13px; color:#8ba6c4; text-align:left; }
   #keys b, #keysTouch b { color:#cfe8ff; font-weight:600; }
-  .btn { margin-top:16px; padding:14px 52px; font-size:15px; letter-spacing:6px; font-weight:700;
-    color:#04121c; background:linear-gradient(180deg,#8fe9ff,#28b6e8); border:none; border-radius:10px;
-    cursor:pointer; pointer-events:auto; transition:transform .12s, box-shadow .2s;
-    box-shadow:0 0 26px rgba(50,190,255,.4); font-family:inherit; }
+  .btn {
+    margin: 20px 0 10px;
+    padding: 14px 52px;
+    font-size: 15px;
+    letter-spacing: 6px;
+    font-weight: 700;
+    color: #04121c;
+    background: linear-gradient(180deg,#8fe9ff,#28b6e8);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform .12s, box-shadow .2s;
+    box-shadow: 0 0 26px rgba(50,190,255,.4);
+    font-family: inherit;
+    flex-shrink: 0;
+  }
   .btn:hover { transform:translateY(-2px); box-shadow:0 0 40px rgba(50,190,255,.7); }
   .btn:active { transform:translateY(0); }
   .btn-toggle {
@@ -277,6 +299,7 @@
   }
 </style>
 </head>
+
 <body>
 
 <button id="backBtn" onclick="location.href='/games'">← 返回</button>
@@ -528,8 +551,8 @@ const BASE_WEAPONS = {
     magSize: 1, reloadTime: 999,
     spreadBase: 0, spreadAdd: 0,
     recoilPitch: 0.008, recoilKick: 0.35,
-    basePos: new THREE.Vector3(0.22, -0.08, -0.32),
-    adsPos:  new THREE.Vector3(0.22, -0.20, -0.32),
+    basePos: new THREE.Vector3(0.24, -0.08, -0.42),
+    adsPos:  new THREE.Vector3(0.24, -0.08, -0.42),
     adsFov: 78, adsSpreadMul: 1,
     scopeType: 'none', suppressor: false,
     isMelee: true, meleeRange: 2.2
@@ -540,8 +563,8 @@ const BASE_WEAPONS = {
     magSize: 1, reloadTime: 999,
     spreadBase: 0, spreadAdd: 0,
     recoilPitch: 0.015, recoilKick: 0.6,
-    basePos: new THREE.Vector3(0.20, -0.08, -0.30),
-    adsPos:  new THREE.Vector3(0.20, -0.20, -0.30),
+    basePos: new THREE.Vector3(0.22, -0.08, -0.42),
+    adsPos:  new THREE.Vector3(0.22, -0.08, -0.42),
     adsFov: 78, adsSpreadMul: 1,
     scopeType: 'none', suppressor: false,
     isMelee: true, meleeRange: 2.0
@@ -769,7 +792,6 @@ let healFlash = 0, healTextT = 0;
 const touchLeft = { id: null, startX: 0, startY: 0, curX: 0, curY: 0 };
 const touchLook = { id: null, lastX: 0, lastY: 0 };
 const touchMoveVec = { x: 0, y: 0 };
-
 /* ============================================================
    6. 枪械视图模型
    ============================================================ */
@@ -978,7 +1000,6 @@ function buildButterflyModel() {
   const handleMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.6, metalness: 0.4 });
   const edgeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x334455, emissiveIntensity: 0.4 });
 
-  // 刀柄（两片）
   const handleGeo = new THREE.BoxGeometry(0.045, 0.085, 0.24);
   const handleL = new THREE.Mesh(handleGeo, handleMat);
   handleL.position.set(-0.028, -0.03, 0.08);
@@ -988,7 +1009,6 @@ function buildButterflyModel() {
   handleR.position.set(0.028, -0.03, 0.08);
   g.add(handleR);
 
-  // 手柄装饰凹槽
   const grooveGeo = new THREE.BoxGeometry(0.005, 0.06, 0.18);
   const grooveMat = new THREE.MeshStandardMaterial({ color: 0x0a0d11, roughness: 0.9 });
   const grooveL = new THREE.Mesh(grooveGeo, grooveMat);
@@ -998,27 +1018,22 @@ function buildButterflyModel() {
   grooveR.position.set(0.05, -0.03, 0.08);
   g.add(grooveR);
 
-  // 枢轴
   const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06, 8).rotateZ(Math.PI / 2), edgeMat);
   pivot.position.set(0, 0.005, -0.06);
   g.add(pivot);
 
-  // 主刀片（更长，向上位置）
   const blade = new THREE.Mesh(new THREE.BoxGeometry(0.014, 0.05, 0.42), bladeMat);
   blade.position.set(0, 0.02, -0.30);
   g.add(blade);
 
-  // 刀尖
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.10, 6).rotateX(-Math.PI / 2), bladeMat);
   tip.position.set(0, 0.02, -0.56);
   g.add(tip);
 
-  // 刃口发光
   const edge = new THREE.Mesh(new THREE.BoxGeometry(0.003, 0.006, 0.44), edgeMat);
   edge.position.set(0.008, 0.02, -0.30);
   g.add(edge);
 
-  // 尾部配重
   const tail = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.06, 0.12), handleMat);
   tail.position.set(0, -0.03, 0.20);
   g.add(tail);
@@ -1037,12 +1052,10 @@ function buildKarambitModel() {
   const handleMat = new THREE.MeshStandardMaterial({ color: 0x1f2226, roughness: 0.55, metalness: 0.45 });
   const ringMat = new THREE.MeshStandardMaterial({ color: 0x0d0f12, roughness: 0.4, metalness: 0.9 });
 
-  // 握把
   const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 0.20), handleMat);
   handle.position.set(0, -0.02, 0.10);
   g.add(handle);
 
-  // 握把防滑纹
   for (let i = 0; i < 4; i++) {
     const grip = new THREE.Mesh(
       new THREE.BoxGeometry(0.052, 0.006, 0.015),
@@ -1052,13 +1065,11 @@ function buildKarambitModel() {
     g.add(grip);
   }
 
-  // 指环（标志性）
   const fingerRing = new THREE.Mesh(new THREE.TorusGeometry(0.048, 0.012, 10, 20), ringMat);
   fingerRing.position.set(0, -0.02, 0.24);
   fingerRing.rotation.y = Math.PI / 2;
   g.add(fingerRing);
 
-  // 弧形刀身（爪刀标志）
   const bladeSegments = [
     { x: 0.0,   y: 0.05, z: -0.06, rot: 0.0,  len: 0.10 },
     { x: 0.02,  y: 0.10, z: -0.14, rot: 0.35, len: 0.10 },
@@ -1075,18 +1086,15 @@ function buildKarambitModel() {
     g.add(seg);
   });
 
-  // 尖端
   const tip = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.09, 6).rotateX(-Math.PI / 2), bladeMat);
   tip.position.set(0.055, 0.26, -0.33);
   tip.rotation.x = 1.7;
   g.add(tip);
 
-  // 基部连接
   const base = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.08), handleMat);
   base.position.set(0, 0.01, -0.04);
   g.add(base);
 
-  // 刃口高光
   const edgeGlow = new THREE.Mesh(
     new THREE.BoxGeometry(0.003, 0.005, 0.30),
     new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, metalness: 1.0, emissive: 0x334455, emissiveIntensity: 0.4 })
@@ -1099,39 +1107,6 @@ function buildKarambitModel() {
   muzzleObj.position.set(0.055, 0.28, -0.36);
   g.add(muzzleObj);
 
-  return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
-}
-  const g = new THREE.Group();
-  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xb8c0cc, roughness: 0.12, metalness: 0.98 });
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0x1f2226, roughness: 0.55, metalness: 0.45 });
-  const ringMat = new THREE.MeshStandardMaterial({ color: 0x0d0f12, roughness: 0.4, metalness: 0.9 });
-  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.05, 0.14), handleMat);
-  handle.position.set(0, -0.13, 0.05); g.add(handle);
-  const fingerRing = new THREE.Mesh(new THREE.TorusGeometry(0.030, 0.007, 8, 16), ringMat);
-  fingerRing.position.set(0, -0.13, 0.14);
-  fingerRing.rotation.y = Math.PI / 2;
-  g.add(fingerRing);
-  const curvePts = [
-    { x: 0.0,  y: -0.11, z: -0.02, rot: 0.0 },
-    { x: 0.01, y: -0.095, z: -0.08, rot: 0.25 },
-    { x: 0.02, y: -0.070, z: -0.13, rot: 0.55 },
-    { x: 0.025, y: -0.040, z: -0.17, rot: 0.9 },
-    { x: 0.02, y: -0.005, z: -0.19, rot: 1.3 },
-  ];
-  curvePts.forEach((p, i) => {
-    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.007, 0.022 - i * 0.002, 0.06), bladeMat);
-    seg.position.set(p.x, p.y, p.z);
-    seg.rotation.x = p.rot;
-    g.add(seg);
-  });
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.01, 0.05, 6).rotateX(-Math.PI / 2), bladeMat);
-  tip.position.set(0.018, 0.025, -0.21);
-  tip.rotation.x = 1.6;
-  g.add(tip);
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.05), handleMat);
-  base.position.set(0, -0.11, -0.04); g.add(base);
-  const muzzleObj = new THREE.Object3D();
-  muzzleObj.position.set(0.02, 0.02, -0.25); g.add(muzzleObj);
   return { group: g, muzzle: muzzleObj, irons: [], redDotScope: null, suppressor: null };
 }
 
@@ -1153,8 +1128,8 @@ const MUZZLE_LIGHT_POS = {
   rifle:  new THREE.Vector3(0.16, -0.14, -1.0),
   sniper: new THREE.Vector3(0.15, -0.13, -1.45),
   pistol: new THREE.Vector3(0.15, -0.13, -0.55),
-  butterfly: new THREE.Vector3(0.22, -0.10, -0.55),
-  karambit: new THREE.Vector3(0.20, 0.00, -0.45)
+  butterfly: new THREE.Vector3(0.24, -0.06, -0.75),
+  karambit: new THREE.Vector3(0.24, -0.05, -0.60)
 };
 muzzleLight.position.copy(MUZZLE_LIGHT_POS[curWeapon]);
 
@@ -1219,7 +1194,6 @@ const sfx = {
   parry() { tone(800, 1600, 0.08, 0.13, 'sine'); tone(1600, 2400, 0.06, 0.08, 'square'); noiseBurst(0.15, 4000, 0.09, 3); },
   heal() { tone(500, 1200, 0.22, 0.10, 'sine'); tone(800, 1600, 0.18, 0.06, 'triangle'); }
 };
-
 /* ============================================================
    8. 敌人
    ============================================================ */
@@ -1883,7 +1857,6 @@ function updateWave(dt) {
     if (waveCooldown > 3.0) { waveCooldown = 0; startWave(); }
   }
 }
-
 /* ============================================================
    13. 玩家更新
    ============================================================ */
@@ -2826,6 +2799,21 @@ function handleCtrlBtn(e) {
 ovBtn.addEventListener('click', handleStartBtn);
 ovBtn.addEventListener('touchend', handleStartBtn, { passive: false });
 ovBtn.addEventListener('pointerup', handleStartBtn);
+
+// 兜底：点击 overlay 空白区也能开始
+overlay.addEventListener('touchend', function (e) {
+  const t = e.target;
+  if (!t) return;
+  if (t.tagName === 'SELECT' || t.tagName === 'OPTION') return;
+  if (t.closest && (t.closest('#weaponSelect') || t.closest('#ctrlToggle'))) return;
+  if (state === 'menu' || state === 'dead') {
+    e.preventDefault();
+    startGame();
+  } else if (state === 'paused') {
+    e.preventDefault();
+    resumeGame();
+  }
+}, { passive: false });
 
 const ctrlBtn = document.getElementById('ctrlToggle');
 ctrlBtn.addEventListener('click', handleCtrlBtn);
