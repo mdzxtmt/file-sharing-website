@@ -42,6 +42,7 @@ function getDeviceId(): string {
 
 export default function UserPage() {
   const [nickname, setNickname] = useState('');
+  const [avatar, setAvatar] = useState('😀');
   const [saved, setSaved] = useState(false);
   const [games, setGames] = useState<Game[]>([]);
   const [game, setGame] = useState('');
@@ -110,7 +111,6 @@ export default function UserPage() {
 
     async function handleSave() {
     const name = nickname.trim().slice(0, 20) || '匿名玩家';
-    const [avatar, setAvatar] = useState('😀');
     localStorage.setItem('player_name', name);
     setNickname(name);
 
@@ -119,7 +119,7 @@ export default function UserPage() {
       const id = getDeviceId();
       if (id) {
         await fetch(
-          `/api/points?device_id=${id}&player_name=${encodeURIComponent(name)}&t=${Date.now()}`,
+          `/api/points?device_id=${id}&player_name=${encodeURIComponent(name)}&avatar=${encodeURIComponent(avatar)}&t=${Date.now()}`,
           { cache: 'no-store' }
         );
       }
