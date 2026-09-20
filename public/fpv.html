@@ -14,67 +14,114 @@
   }
   canvas { display:block; }
 
-  /* ===== HUD ===== */
+  /* HUD */
   #hud { position:fixed; inset:0; pointer-events:none; z-index:5; }
-  #crosshair {
-    position:absolute; left:50%; top:50%; width:40px; height:40px;
-    transform:translate(-50%,-50%);
-  }
-  #crosshair::before, #crosshair::after {
-    content:''; position:absolute; background:rgba(255,255,255,0.85);
-    box-shadow:0 0 4px rgba(0,0,0,0.5);
-  }
-  #crosshair::before { left:50%; top:0; width:2px; height:40px; transform:translateX(-50%); }
-  #crosshair::after { top:50%; left:0; height:2px; width:40px; transform:translateY(-50%); }
-
   #topbar {
     position:absolute; top:18px; left:50%; transform:translateX(-50%);
-    display:flex; gap:24px; padding:10px 24px; border-radius:12px;
-    background:rgba(10,16,26,0.65); border:1px solid rgba(90,160,220,0.3);
+    display:flex; gap:20px; padding:10px 22px; border-radius:12px;
+    background:rgba(10,16,26,0.6); border:1px solid rgba(90,160,220,0.3);
     backdrop-filter:blur(8px);
   }
-  .stat { display:flex; flex-direction:column; align-items:center; min-width:64px; }
+  .stat { display:flex; flex-direction:column; align-items:center; min-width:60px; }
   .stat .label { font-size:10px; letter-spacing:2px; color:#6b87a8; margin-bottom:2px; }
-  .stat .val { font-size:20px; font-weight:700; color:#a5e8ff; font-variant-numeric:tabular-nums; }
+  .stat .val { font-size:19px; font-weight:700; color:#a5e8ff; font-variant-numeric:tabular-nums; }
 
-  #speed-bar {
-    position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
-    width:220px; height:8px; border-radius:4px;
-    background:rgba(0,0,0,0.4); overflow:hidden;
+  /* 中央准星（机头方向） */
+  #aimCenter {
+    position:absolute; left:50%; top:50%; width:32px; height:32px;
+    transform:translate(-50%,-50%);
+  }
+  #aimCenter::before, #aimCenter::after {
+    content:''; position:absolute; background:rgba(255,255,255,0.9);
+    box-shadow:0 0 4px rgba(0,0,0,0.6);
+  }
+  #aimCenter::before { left:50%; top:0; width:2px; height:32px; transform:translateX(-50%); }
+  #aimCenter::after { top:50%; left:0; height:2px; width:32px; transform:translateY(-50%); }
+
+  /* 鼠标目标圈 */
+  #aimTarget {
+    position:absolute; width:52px; height:52px;
+    border:2px dashed rgba(120,220,255,0.75);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
+    transition:border-color 0.15s;
+    pointer-events:none;
+  }
+  #aimTarget.locked {
+    border-style:solid;
+    border-color:rgba(80,255,140,0.95);
+    box-shadow:0 0 16px rgba(80,255,140,0.7);
+  }
+
+  /* 油门条 */
+  #throttleBar {
+    position:absolute; bottom:30px; left:30px;
+    width:60px; height:180px;
+    background:rgba(0,0,0,0.4);
+    border:1px solid rgba(120,180,230,0.4);
+    border-radius:8px;
+    overflow:hidden;
+    display:flex; flex-direction:column-reverse;
+  }
+  #throttleFill {
+    width:100%; height:50%;
+    background:linear-gradient(180deg,#22d3ee,#3b82f6);
+    transition:height 0.1s linear;
+  }
+  #throttleLabel {
+    position:absolute; bottom:220px; left:30px;
+    font-size:11px; color:#8fb4d6; letter-spacing:2px;
+    text-shadow:0 0 4px #000;
+  }
+
+  /* 高度显示 */
+  #altDisplay {
+    position:absolute; bottom:30px; right:30px;
+    text-align:right;
+    background:rgba(0,0,0,0.4);
+    padding:8px 14px;
+    border-radius:8px;
     border:1px solid rgba(120,180,230,0.3);
   }
-  #speed-fill {
-    height:100%; width:0%;
-    background:linear-gradient(90deg,#22d3ee,#f59e0b,#ef4444);
-    transition:width .1s linear;
+  #altDisplay .label { font-size:10px; color:#6b87a8; letter-spacing:2px; }
+  #altDisplay .val { font-size:22px; font-weight:700; color:#a5e8ff; font-variant-numeric:tabular-nums; }
+
+  /* 速度显示 */
+  #spdDisplay {
+    position:absolute; bottom:30px; right:30px; margin-right:120px;
+    text-align:right;
+    background:rgba(0,0,0,0.4);
+    padding:8px 14px;
+    border-radius:8px;
+    border:1px solid rgba(120,180,230,0.3);
   }
+  #spdDisplay .label { font-size:10px; color:#6b87a8; letter-spacing:2px; }
+  #spdDisplay .val { font-size:22px; font-weight:700; color:#a5e8ff; font-variant-numeric:tabular-nums; }
 
   #msg {
-    position:absolute; left:50%; top:30%; transform:translate(-50%,-50%);
-    font-size:48px; font-weight:800; letter-spacing:6px;
+    position:absolute; left:50%; top:32%; transform:translate(-50%,-50%);
+    font-size:44px; font-weight:800; letter-spacing:6px;
     color:#fff; text-shadow:0 0 20px rgba(80,200,255,0.9), 0 4px 8px rgba(0,0,0,0.6);
-    opacity:0; transition:opacity 0.3s; pointer-events:none;
-    white-space:nowrap;
+    opacity:0; transition:opacity 0.3s;
   }
   #msg.show { opacity:1; }
 
-  /* ===== 返回按钮 ===== */
+  /* 返回按钮 */
   #backBtn {
     position:fixed; top:14px; left:14px; z-index:100;
     padding:8px 16px; border-radius:10px;
     background:rgba(10,16,26,0.7); border:1px solid rgba(90,160,220,0.4);
     color:#cfe8ff; font-size:13px; font-weight:600;
-    cursor:pointer; font-family:inherit;
+    cursor:pointer; font-family:inherit; text-decoration:none;
     backdrop-filter:blur(8px);
-    text-decoration:none;
   }
   #backBtn:active { transform:scale(0.95); }
 
-  /* ===== 开始/结束界面 ===== */
+  /* 开始/结束界面 */
   #overlay {
     position:fixed; inset:0; z-index:20;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:16px; text-align:center; padding:24px;
+    gap:14px; text-align:center; padding:24px;
     background:radial-gradient(ellipse at center, rgba(10,20,35,0.85), rgba(3,6,12,0.97));
     backdrop-filter:blur(8px);
     color:#dfe8f5;
@@ -82,55 +129,49 @@
   }
   #overlay.hidden { display:none; }
   #overlay h1 {
-    font-size:44px; letter-spacing:10px; font-weight:800;
+    font-size:42px; letter-spacing:10px; font-weight:800;
     background:linear-gradient(180deg,#d6f6ff,#3fa9e0);
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
-  #overlay h2 { font-size:14px; letter-spacing:4px; color:#5f7fa3; font-weight:400; }
+  #overlay h2 { font-size:13px; letter-spacing:4px; color:#5f7fa3; font-weight:400; }
   #overlay .keys {
     display:grid; grid-template-columns:auto auto; gap:8px 24px;
-    font-size:13px; color:#8ba6c4; text-align:left; margin:12px 0;
+    font-size:13px; color:#8ba6c4; text-align:left; margin:8px 0;
     background:rgba(255,255,255,0.04);
-    padding:16px 24px; border-radius:12px;
+    padding:14px 22px; border-radius:12px;
     border:1px solid rgba(255,255,255,0.08);
   }
   #overlay .keys b { color:#cfe8ff; font-weight:600; }
-  #ovStats { display:flex; gap:40px; margin:8px 0; }
+  #ovStats { display:flex; gap:36px; margin:6px 0; }
   #ovStats > div { display:flex; flex-direction:column; gap:2px; }
-  #ovStats .v { font-size:26px; font-weight:700; color:#7dd3fc; }
+  #ovStats .v { font-size:24px; font-weight:700; color:#7dd3fc; }
   #ovStats .k { font-size:11px; letter-spacing:2px; color:#5f7fa3; }
 
   .btn {
-    margin-top:8px; padding:14px 52px; font-size:15px;
+    margin-top:6px; padding:13px 50px; font-size:15px;
     letter-spacing:5px; font-weight:700;
     color:#04121c; background:linear-gradient(180deg,#8fe9ff,#28b6e8);
     border:none; border-radius:10px; cursor:pointer;
-    box-shadow:0 0 24px rgba(50,190,255,0.45);
+    box-shadow:0 0 22px rgba(50,190,255,0.45);
     font-family:inherit;
     transition:transform 0.15s, box-shadow 0.15s;
   }
-  .btn:hover { transform:translateY(-2px); box-shadow:0 0 36px rgba(50,190,255,0.7); }
+  .btn:hover { transform:translateY(-2px); box-shadow:0 0 34px rgba(50,190,255,0.7); }
   .btn:active { transform:translateY(0); }
 
-  /* ===== 触摸控件 ===== */
+  /* 触摸控件 */
   #touchControls { position:fixed; inset:0; z-index:15; display:none; pointer-events:none; }
   #touchControls.active { display:block; }
 
-  #joy {
-    position:absolute; left:6vmin; bottom:6vmin;
-    width:28vmin; height:28vmin; border-radius:50%;
-    background:rgba(20,40,60,0.35);
-    border:2px solid rgba(120,180,230,0.5);
-    pointer-events:auto;
-    box-shadow:inset 0 0 24px rgba(0,0,0,0.4);
+  /* 手机横屏提示 */
+  #rotateTip {
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:#06090f; color:#cfe8ff;
+    flex-direction:column; align-items:center; justify-content:center;
+    gap:20px;
   }
-  #joyKnob {
-    position:absolute; left:50%; top:50%;
-    width:40%; height:40%; border-radius:50%;
-    background:rgba(120,200,255,0.55);
-    border:2px solid rgba(160,220,255,0.9);
-    transform:translate(-50%,-50%);
-    pointer-events:none;
+  @media (orientation: portrait) and (max-width:900px) {
+    #rotateTip { display:flex; }
   }
 
   .tbtn {
@@ -143,41 +184,49 @@
     font-size:12px; font-weight:800;
     display:flex; align-items:center; justify-content:center;
     backdrop-filter:blur(4px);
+    touch-action:manipulation;
   }
   .tbtn.pressed { background:rgba(60,140,220,0.9); color:#fff; transform:scale(0.94); }
 
-  #btnUp { right:10vmin; bottom:28vmin; width:16vmin; height:16vmin; font-size:2.8vmin; }
-  #btnDown { right:10vmin; bottom:8vmin; width:16vmin; height:16vmin; font-size:2.8vmin; }
-  #btnBoost { right:30vmin; bottom:14vmin; width:14vmin; height:14vmin; font-size:2.4vmin; }
-
-  #lookArea {
-    position:absolute; right:0; top:0;
-    width:50%; height:100%;
-    pointer-events:auto;
-  }
+  #btnThrottleUp { right:24px; bottom:180px; width:80px; height:80px; font-size:26px; }
+  #btnThrottleDown { right:24px; bottom:20px; width:80px; height:80px; font-size:26px; }
+  #btnBrake { right:120px; bottom:20px; width:70px; height:70px; font-size:13px; }
 </style>
 </head>
 <body>
 
 <a id="backBtn" href="/games">← 返回</a>
 
+<div id="rotateTip">
+  <div style="font-size:56px;">📱</div>
+  <div style="font-size:15px;letter-spacing:2px;">请横屏使用</div>
+</div>
+
 <div id="hud">
-  <div id="crosshair"></div>
   <div id="topbar">
     <div class="stat"><span class="label">RINGS</span><span class="val" id="uiRings">0</span></div>
     <div class="stat"><span class="label">TIME</span><span class="val" id="uiTime">0.0</span></div>
     <div class="stat"><span class="label">BEST</span><span class="val" id="uiBest">0</span></div>
   </div>
-  <div id="speed-bar"><div id="speed-fill"></div></div>
+  <div id="aimCenter"></div>
+  <div id="aimTarget"></div>
+  <div id="throttleBar"><div id="throttleFill"></div></div>
+  <div id="throttleLabel">油门</div>
+  <div id="spdDisplay">
+    <div class="label">SPD</div>
+    <div class="val"><span id="uiSpeed">40</span></div>
+  </div>
+  <div id="altDisplay">
+    <div class="label">ALT</div>
+    <div class="val"><span id="uiAlt">30</span></div>
+  </div>
   <div id="msg"></div>
 </div>
 
 <div id="touchControls">
-  <div id="joy"><div id="joyKnob"></div></div>
-  <div class="tbtn" id="btnUp">↑</div>
-  <div class="tbtn" id="btnDown">↓</div>
-  <div class="tbtn" id="btnBoost">加速</div>
-  <div id="lookArea"></div>
+  <div class="tbtn" id="btnThrottleUp">▲</div>
+  <div class="tbtn" id="btnThrottleDown">▼</div>
+  <div class="tbtn" id="btnBrake">刹车</div>
 </div>
 
 <div id="overlay">
@@ -188,12 +237,10 @@
     <div><span class="v" id="ovTime">0.0</span><span class="k">TIME</span></div>
   </div>
   <div class="keys">
-    <b>鼠标 / 手指滑动</b><span>控制方向</span>
-    <b>W / 上键</b><span>加速</span>
-    <b>S / 下键</b><span>减速</span>
-    <b>A / D</b><span>左右偏航</span>
-    <b>空格</b><span>上升</span>
-    <b>Shift</b><span>下降</span>
+    <b>鼠标移动</b><span>控制飞行方向</span>
+    <b>W / S</b><span>加油门 / 减油门</span>
+    <b>A / D</b><span>左右微调</span>
+    <b>空格 / Shift</b><span>上升 / 下降</span>
     <b>ESC</b><span>暂停</span>
   </div>
   <button class="btn" id="ovBtn">开始飞行</button>
@@ -216,12 +263,11 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 100, 500);
+scene.fog = new THREE.Fog(0x87ceeb, 150, 700);
 
-const camera = new THREE.PerspectiveCamera(80, innerWidth / innerHeight, 0.1, 2000);
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 3000);
 scene.add(camera);
 
-// 光照
 scene.add(new THREE.HemisphereLight(0xffffff, 0x88aa55, 0.9));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2);
 sun.position.set(60, 100, 40);
@@ -235,18 +281,16 @@ sun.shadow.camera.far = 400;
 scene.add(sun);
 
 /* ============================================================
-   地形
+   地面
    ============================================================ */
 const GROUND_SIZE = 3000;
 
-// 地面
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(GROUND_SIZE, GROUND_SIZE, 100, 100),
   new THREE.MeshStandardMaterial({ color: 0x5a8a3c, roughness: 0.95, metalness: 0.05 })
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
-// 起伏地形
 const gPos = ground.geometry.attributes.position;
 for (let i = 0; i < gPos.count; i++) {
   const x = gPos.getX(i);
@@ -259,26 +303,17 @@ for (let i = 0; i < gPos.count; i++) {
 ground.geometry.computeVertexNormals();
 scene.add(ground);
 
-// 网格辅助线（低空）
-const grid = new THREE.GridHelper(GROUND_SIZE, 100, 0x3a6b2a, 0x3a6b2a);
-grid.position.y = 0.5;
-grid.material.opacity = 0.15;
-grid.material.transparent = true;
-scene.add(grid);
-
 /* ============================================================
    穿越机模型
    ============================================================ */
 const drone = new THREE.Group();
 scene.add(drone);
 
-// 机身
 const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.6, metalness: 0.4 });
 const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 1.2), bodyMat);
 body.castShadow = true;
 drone.add(body);
 
-// 中央处理器
 const cpu = new THREE.Mesh(
   new THREE.BoxGeometry(0.5, 0.15, 0.5),
   new THREE.MeshStandardMaterial({ color: 0xff3333, roughness: 0.5, metalness: 0.5 })
@@ -287,20 +322,17 @@ cpu.position.y = 0.2;
 cpu.castShadow = true;
 drone.add(cpu);
 
-// 4 个电机臂 + 螺旋桨
 const armMat = new THREE.MeshStandardMaterial({ color: 0x1a1d22, roughness: 0.7, metalness: 0.3 });
 const propMat = new THREE.MeshStandardMaterial({ color: 0x66ccff, transparent: true, opacity: 0.7, roughness: 0.2, metalness: 0.8 });
 const props = [];
 
 for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-  // 电机臂
   const arm = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 1.0), armMat);
   arm.position.set(dx * 0.5, 0, dz * 0.5);
   arm.rotation.y = Math.atan2(dx, dz);
   arm.castShadow = true;
   drone.add(arm);
 
-  // 电机
   const motor = new THREE.Mesh(
     new THREE.CylinderGeometry(0.18, 0.18, 0.25, 12),
     new THREE.MeshStandardMaterial({ color: 0x333, roughness: 0.4, metalness: 0.8 })
@@ -309,39 +341,34 @@ for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
   motor.castShadow = true;
   drone.add(motor);
 
-  // 螺旋桨
   const prop = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.05, 0.15), propMat);
   prop.position.set(dx * 1.0, 0.25, dz * 1.0);
   drone.add(prop);
   props.push(prop);
 }
 
-// 相机臂（FPV 视角：摄像头装在机头）
-const camMount = new THREE.Mesh(
-  new THREE.BoxGeometry(0.3, 0.2, 0.3),
-  new THREE.MeshStandardMaterial({ color: 0x0a0a0a })
-);
-camMount.position.set(0, 0.25, -0.5);
-camMount.rotation.x = 0.3;
-drone.add(camMount);
-
-// 机头方向指示（红色 LED）
+// 机头指示灯（红）
 const nose = new THREE.Mesh(
-  new THREE.SphereGeometry(0.12, 8, 8),
-  new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  new THREE.SphereGeometry(0.15, 8, 8),
+  new THREE.MeshBasicMaterial({ color: 0xff2222 })
 );
-nose.position.set(0, 0.15, -0.65);
+nose.position.set(0, 0.15, -0.7);
 drone.add(nose);
 
-// 世界位置
-drone.position.set(0, 30, 0);
+// 尾部灯（绿）
+const tail = new THREE.Mesh(
+  new THREE.SphereGeometry(0.12, 8, 8),
+  new THREE.MeshBasicMaterial({ color: 0x22ff44 })
+);
+tail.position.set(0, 0.15, 0.7);
+drone.add(tail);
 
 /* ============================================================
-   圆环生成
+   圆环
    ============================================================ */
 const RING_COUNT = 15;
 const rings = [];
-const ringGeo = new THREE.TorusGeometry(6, 0.5, 12, 48);
+const ringGeo = new THREE.TorusGeometry(8, 0.6, 12, 48);
 const ringMat = new THREE.MeshStandardMaterial({
   color: 0xffcc00, emissive: 0xff8800, emissiveIntensity: 0.5,
   roughness: 0.4, metalness: 0.6
@@ -352,23 +379,31 @@ const ringPassedMat = new THREE.MeshStandardMaterial({
   transparent: true, opacity: 0.4
 });
 
-// 生成 Z 轴逐渐深入的圆环
-let lastZ = -80;
+function generateRings() {
+  let lastZ = -100;
+  for (let i = 0; i < rings.length; i++) {
+    const ring = rings[i];
+    ring.position.set(
+      (Math.random() - 0.5) * 70,
+      25 + (Math.random() - 0.5) * 30,
+      lastZ - 50 - Math.random() * 25
+    );
+    ring.rotation.z = (Math.random() - 0.5) * 0.3;
+    ring.userData.passed = false;
+    ring.material = ringMat.clone();
+    lastZ = ring.position.z;
+  }
+}
+
 for (let i = 0; i < RING_COUNT; i++) {
   const ring = new THREE.Mesh(ringGeo, ringMat.clone());
-  ring.position.set(
-    (Math.random() - 0.5) * 60,
-    25 + (Math.random() - 0.5) * 30,
-    lastZ - 40 - Math.random() * 20
-  );
-  ring.rotation.z = (Math.random() - 0.5) * 0.3;
   ring.castShadow = true;
-  ring.userData.passed = false;
   ring.userData.index = i;
+  ring.userData.passed = false;
   scene.add(ring);
   rings.push(ring);
-  lastZ = ring.position.z;
 }
+generateRings();
 
 /* ============================================================
    状态
@@ -378,97 +413,93 @@ let ringsPassed = 0;
 let startTime = 0;
 let bestRings = parseInt(localStorage.getItem('fpv_best_rings') || '0', 10);
 
-const droneState = {
-  yaw: 0,        // 偏航（左右转头）
-  pitch: 0,      // 俯仰（上下倾斜）
-  roll: 0,       // 翻滚（左右倾斜，视觉）
-  velocity: new THREE.Vector3(),
-  speed: 0,      // 前进速度
-  maxSpeed: 80,
+const plane = {
+  pos: new THREE.Vector3(0, 30, 0),
+  yaw: 0,
+  pitch: 0,
+  roll: 0,
+  yawVel: 0,
+  pitchVel: 0,
+  speed: 40,
+  throttle: 0.5,
+  maxSpeed: 130,
   minSpeed: 15,
-};
-
-// 目标姿态（由输入决定）
-const input = {
-  pitch: 0,     // -1 到 1
-  yaw: 0,       // -1 到 1
-  boost: false,
 };
 
 const keys = {};
 
 /* ============================================================
-   输入 - 鼠标/触摸控制方向
+   输入
    ============================================================ */
 let pointerX = innerWidth / 2;
 let pointerY = innerHeight / 2;
 
 document.addEventListener('mousemove', (e) => {
   if (isTouch) return;
-  if (state !== 'playing') return;
   pointerX = e.clientX;
   pointerY = e.clientY;
 });
 
-// 触摸
-const joyEl = document.getElementById('joy');
-const joyKnob = document.getElementById('joyKnob');
-const joyState = { active: false, id: null, cx: 0, cy: 0, maxR: 60 };
-
-if (isTouch) {
-  document.getElementById('touchControls').classList.add('active');
-}
-
-joyEl.addEventListener('touchstart', (e) => {
-  if (state !== 'playing') return;
-  e.preventDefault();
+// 触摸：全屏拖动控制方向
+let touchLookId = null;
+let touchLookX = 0, touchLookY = 0;
+document.addEventListener('touchstart', (e) => {
+  if (!isTouch || state !== 'playing') return;
   const t = e.changedTouches[0];
-  const rect = joyEl.getBoundingClientRect();
-  joyState.cx = rect.left + rect.width / 2;
-  joyState.cy = rect.top + rect.height / 2;
-  joyState.maxR = rect.width * 0.4;
-  joyState.id = t.identifier;
-  joyState.active = true;
-  updateJoy(t.clientX, t.clientY);
+  // 避开按钮区域
+  if (t.target.closest && t.target.closest('.tbtn')) return;
+  if (t.target.id === 'backBtn') return;
+  if (touchLookId === null) {
+    touchLookId = t.identifier;
+    touchLookX = t.clientX;
+    touchLookY = t.clientY;
+    pointerX = t.clientX;
+    pointerY = t.clientY;
+  }
 }, { passive: false });
 
-joyEl.addEventListener('touchmove', (e) => {
-  if (!joyState.active) return;
-  e.preventDefault();
+document.addEventListener('touchmove', (e) => {
+  if (!isTouch || state !== 'playing') return;
   for (const t of e.changedTouches) {
-    if (t.identifier === joyState.id) updateJoy(t.clientX, t.clientY);
+    if (t.identifier === touchLookId) {
+      // 相对拖动 → 目标位置
+      const dx = t.clientX - touchLookX;
+      const dy = t.clientY - touchLookY;
+      pointerX += dx * 1.5;
+      pointerY += dy * 1.5;
+      pointerX = Math.max(0, Math.min(innerWidth, pointerX));
+      pointerY = Math.max(0, Math.min(innerHeight, pointerY));
+      touchLookX = t.clientX;
+      touchLookY = t.clientY;
+      e.preventDefault();
+    }
   }
 }, { passive: false });
 
-function resetJoy() {
-  joyState.active = false;
-  joyState.id = null;
-  joyKnob.style.transform = 'translate(-50%,-50%)';
-  input.yaw = 0;
-  input.pitch = 0;
-}
-
-joyEl.addEventListener('touchend', (e) => {
+document.addEventListener('touchend', (e) => {
+  if (!isTouch) return;
   for (const t of e.changedTouches) {
-    if (t.identifier === joyState.id) resetJoy();
+    if (t.identifier === touchLookId) touchLookId = null;
   }
-}, { passive: false });
-joyEl.addEventListener('touchcancel', resetJoy, { passive: false });
+});
 
-function updateJoy(x, y) {
-  let dx = x - joyState.cx;
-  let dy = y - joyState.cy;
-  const dist = Math.hypot(dx, dy);
-  if (dist > joyState.maxR) {
-    dx = dx / dist * joyState.maxR;
-    dy = dy / dist * joyState.maxR;
+// 键盘
+addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code === 'Escape') {
+    if (state === 'playing') {
+      state = 'paused';
+      showOverlay('已暂停', '按 ESC 继续', '继续飞行', false);
+    } else if (state === 'paused') {
+      state = 'playing';
+      hideOverlay();
+    }
   }
-  joyKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-  input.yaw = dx / joyState.maxR;
-  input.pitch = dy / joyState.maxR;
-}
+  if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+});
+addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-// 触摸按钮
+// 触摸按钮：油门
 function bindHold(id, onDown, onUp) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -476,169 +507,154 @@ function bindHold(id, onDown, onUp) {
   el.addEventListener('touchend', (e) => { e.preventDefault(); el.classList.remove('pressed'); onUp && onUp(); }, { passive: false });
   el.addEventListener('touchcancel', () => { el.classList.remove('pressed'); onUp && onUp(); });
 }
-bindHold('btnUp', () => { input.boost = true; }, () => { input.boost = false; });
-bindHold('btnDown', () => { input.boost = false; });
-
-// 触摸右侧滑动控制方向
-const lookArea = document.getElementById('lookArea');
-let lookState = { id: null, lastX: 0, lastY: 0 };
-lookArea.addEventListener('touchstart', (e) => {
-  if (state !== 'playing') return;
-  e.preventDefault();
-  const t = e.changedTouches[0];
-  lookState.id = t.identifier;
-  lookState.lastX = t.clientX;
-  lookState.lastY = t.clientY;
-}, { passive: false });
-lookArea.addEventListener('touchmove', (e) => {
-  if (lookState.id === null) return;
-  e.preventDefault();
-  for (const t of e.changedTouches) {
-    if (t.identifier === lookState.id) {
-      const dx = t.clientX - lookState.lastX;
-      const dy = t.clientY - lookState.lastY;
-      pointerX += dx * 2;
-      pointerY += dy * 2;
-      pointerX = Math.max(0, Math.min(innerWidth, pointerX));
-      pointerY = Math.max(0, Math.min(innerHeight, pointerY));
-      lookState.lastX = t.clientX;
-      lookState.lastY = t.clientY;
-    }
-  }
-}, { passive: false });
-lookArea.addEventListener('touchend', (e) => {
-  for (const t of e.changedTouches) {
-    if (t.identifier === lookState.id) lookState.id = null;
-  }
-}, { passive: false });
-
-/* ============================================================
-   键盘
-   ============================================================ */
-addEventListener('keydown', (e) => {
-  keys[e.code] = true;
-  if (e.code === 'Escape' && state === 'playing') {
-    state = 'paused';
-    showOverlay('已暂停', '按 ESC 继续', '继续飞行', false);
-  } else if (e.code === 'Escape' && state === 'paused') {
-    state = 'playing';
-    hideOverlay();
-  }
-  if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
-});
-addEventListener('keyup', (e) => { keys[e.code] = false; });
+let touchThrottleUp = false, touchThrottleDown = false, touchBrake = false;
+bindHold('btnThrottleUp', () => { touchThrottleUp = true; }, () => { touchThrottleUp = false; });
+bindHold('btnThrottleDown', () => { touchThrottleDown = true; }, () => { touchThrottleDown = false; });
+bindHold('btnBrake', () => { touchBrake = true; }, () => { touchBrake = false; });
 
 /* ============================================================
    主循环
    ============================================================ */
 const clock = new THREE.Clock();
-let lastTime = performance.now();
+const aimTargetEl = document.getElementById('aimTarget');
+const MAX_YAW_VEL = 1.8;    // 最大偏航角速度（弧度/秒）
+const MAX_PITCH_VEL = 1.4;  // 最大俯仰角速度
+const DEADZONE = 0.08;
 
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
 
   // 螺旋桨旋转
-  const propSpeed = state === 'playing' ? 40 : 8;
+  const propSpeed = state === 'playing' ? 50 : 8;
   for (const p of props) p.rotation.y += propSpeed * dt;
 
   if (state === 'playing') {
-    // ===== 输入处理 =====
-    // 鼠标位置 → 目标 pitch/yaw
-    if (!isTouch) {
-      const nx = (pointerX / innerWidth - 0.5) * 2;
-      const ny = (pointerY / innerHeight - 0.5) * 2;
-      input.yaw = nx;
-      input.pitch = ny;
+    // ===== 鼠标位置 → 归一化 [-1, 1] =====
+    let mx = (pointerX / innerWidth) * 2 - 1;
+    let my = (pointerY / innerHeight) * 2 - 1;
+
+    // 死区
+    if (Math.abs(mx) < DEADZONE) mx = 0;
+    else mx = (mx - Math.sign(mx) * DEADZONE) / (1 - DEADZONE);
+
+    if (Math.abs(my) < DEADZONE) my = 0;
+    else my = (my - Math.sign(my) * DEADZONE) / (1 - DEADZONE);
+
+    // 鼠标位置越靠边，转向越快
+    const targetYawVel = -mx * MAX_YAW_VEL;
+    const targetPitchVel = -my * MAX_PITCH_VEL;
+
+    // 平滑
+    plane.yawVel += (targetYawVel - plane.yawVel) * dt * 5;
+    plane.pitchVel += (targetPitchVel - plane.pitchVel) * dt * 5;
+
+    // 键盘微调
+    if (keys['KeyA'] || keys['ArrowLeft']) plane.yawVel -= 1.0 * dt * 8;
+    if (keys['KeyD'] || keys['ArrowRight']) plane.yawVel += 1.0 * dt * 8;
+
+    // 应用角速度
+    plane.yaw += plane.yawVel * dt;
+    plane.pitch += plane.pitchVel * dt;
+
+    // 俯仰限制
+    plane.pitch = Math.max(-1.3, Math.min(1.3, plane.pitch));
+
+    // ===== 自动滚转（转弯时倾斜） =====
+    const targetRoll = -mx * 0.7;
+    plane.roll += (targetRoll - plane.roll) * dt * 5;
+
+    // ===== 油门 =====
+    if (keys['KeyW'] || keys['ArrowUp'] || touchThrottleUp) {
+      plane.throttle = Math.min(1, plane.throttle + dt * 0.5);
+    }
+    if (keys['KeyS'] || keys['ArrowDown'] || touchThrottleDown) {
+      plane.throttle = Math.max(0, plane.throttle - dt * 0.5);
     }
 
-    // 键盘覆盖
-    let kbBoost = keys['KeyW'] || keys['ArrowUp'];
-    let kbBrake = keys['KeyS'] || keys['ArrowDown'];
-    let kbLeft = keys['KeyA'] || keys['ArrowLeft'];
-    let kbRight = keys['KeyD'] || keys['ArrowRight'];
-    let kbUp = keys['Space'];
-    let kbDown = keys['ShiftLeft'] || keys['ShiftRight'];
+    // 刹车
+    if (touchBrake || keys['ShiftLeft'] || keys['ShiftRight']) {
+      plane.speed *= (1 - dt * 1.5);
+    }
 
-    if (kbLeft) input.yaw = -1;
-    if (kbRight) input.yaw = 1;
+    // 目标速度
+    const targetSpeed = plane.minSpeed + plane.throttle * (plane.maxSpeed - plane.minSpeed);
+    plane.speed += (targetSpeed - plane.speed) * dt * 1.5;
 
-    let pitchTarget = input.pitch;
-    if (kbUp) pitchTarget = -1;
-    if (kbDown) pitchTarget = 1;
-
-    // ===== 姿态平滑 =====
-    const targetYawRate = input.yaw * 1.8;   // 偏航角速度
-    const targetPitch = pitchTarget * 0.7;   // 俯仰目标角度
-
-    droneState.yaw += targetYawRate * dt;
-    droneState.pitch += (targetPitch - droneState.pitch) * dt * 4;
-    droneState.roll += (-input.yaw * 0.5 - droneState.roll) * dt * 5;
-
-    // ===== 速度控制 =====
-    const accel = input.boost || kbBoost ? 60 : 30;
-    const brake = kbBrake ? 50 : 0;
-    droneState.speed += (accel - brake) * dt;
-    if (kbBrake) droneState.speed -= 80 * dt;
-    droneState.speed = Math.max(droneState.minSpeed, Math.min(droneState.maxSpeed, droneState.speed));
+    // ===== 垂直分量（俯仰影响高度） =====
+    const verticalFromPitch = Math.sin(plane.pitch) * plane.speed;
 
     // ===== 移动 =====
-    const dirX = Math.sin(droneState.yaw);
-    const dirZ = -Math.cos(droneState.yaw);
+    const dir = new THREE.Vector3(
+      -Math.sin(plane.yaw),
+      0,
+      -Math.cos(plane.yaw)
+    );
+    // 按 cos(pitch) 修正水平速度
+    const horizSpeed = plane.speed * Math.cos(plane.pitch);
+    plane.pos.x += dir.x * horizSpeed * dt;
+    plane.pos.z += dir.z * horizSpeed * dt;
+    plane.pos.y += verticalFromPitch * dt;
 
-    // 俯仰影响高度：低头加速下降，抬头上升
-    const verticalFromPitch = -droneState.pitch * droneState.speed * 0.6;
-
-    // 水平移动
-    drone.position.x += dirX * droneState.speed * dt;
-    drone.position.z += dirZ * droneState.speed * dt;
-    drone.position.y += verticalFromPitch * dt;
+    // 键盘升降
+    if (keys['Space']) plane.pos.y += 25 * dt;
 
     // 边界
     const limit = GROUND_SIZE / 2 - 50;
-    drone.position.x = Math.max(-limit, Math.min(limit, drone.position.x));
-    drone.position.z = Math.max(-limit, Math.min(limit, drone.position.z));
+    plane.pos.x = Math.max(-limit, Math.min(limit, plane.pos.x));
+    plane.pos.z = Math.max(-limit, Math.min(limit, plane.pos.z));
 
-    // 不能低于地面
-    if (drone.position.y < 3) {
-      drone.position.y = 3;
-      droneState.pitch = Math.max(0, droneState.pitch);
-    }
-    // 高度上限
-    if (drone.position.y > 200) drone.position.y = 200;
+    // 高度限制
+    if (plane.pos.y < 3) { plane.pos.y = 3; plane.pitch = Math.min(0, plane.pitch); }
+    if (plane.pos.y > 250) plane.pos.y = 250;
 
     // ===== 应用姿态 =====
+    drone.position.copy(plane.pos);
     drone.rotation.order = 'YXZ';
-    drone.rotation.y = droneState.yaw;
-    drone.rotation.x = droneState.pitch;
-    drone.rotation.z = droneState.roll;
+    drone.rotation.y = plane.yaw;
+    drone.rotation.x = plane.pitch;
+    drone.rotation.z = plane.roll;
 
-    // ===== 相机跟随（FPV 视角）=====
-    const camOffset = new THREE.Vector3(0, 0.5, -1.2);
-    camOffset.applyEuler(new THREE.Euler(0, droneState.yaw, 0));
-    camera.position.copy(drone.position).add(camOffset);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.y = droneState.yaw;
-    camera.rotation.x = droneState.pitch * 0.7;
-    camera.rotation.z = droneState.roll * 0.5;
+    // ===== 第三人称相机 =====
+    const camEuler = new THREE.Euler(plane.pitch * 0.7, plane.yaw, 0, 'YXZ');
+    const camBack = new THREE.Vector3(0, 6, 24).applyEuler(camEuler);
+    const camTargetPos = plane.pos.clone().add(camBack);
 
-    // ===== 圆环检测 =====
+    // 地面保护
+    if (camTargetPos.y < 2) camTargetPos.y = 2;
+
+    camera.position.lerp(camTargetPos, dt * 5);
+
+    // 看向飞机前方一点
+    const lookAhead = plane.pos.clone().add(
+      new THREE.Vector3(0, 0, -1).applyEuler(camEuler).multiplyScalar(20)
+    );
+    camera.lookAt(lookAhead);
+
+    // ===== 目标圈跟随鼠标位置 =====
+    aimTargetEl.style.left = pointerX + 'px';
+    aimTargetEl.style.top = pointerY + 'px';
+
+    // 鼠标在中央 → 锁定变色
+    const distFromCenter = Math.hypot(pointerX - innerWidth / 2, pointerY - innerHeight / 2);
+    if (distFromCenter < 40) aimTargetEl.classList.add('locked');
+    else aimTargetEl.classList.remove('locked');
+
+    // ===== 圆环穿越检测 =====
     for (const ring of rings) {
       if (ring.userData.passed) continue;
 
-      // 检查无人机是否穿过圆环平面
+      // 检测无人机是否穿过圆环平面（Z 方向）
       const ringZ = ring.position.z;
-      const prevZ = drone.position.z - dirZ * droneState.speed * dt;
-      const currZ = drone.position.z;
+      const prevZ = plane.pos.z - dir.z * horizSpeed * dt;
+      const currZ = plane.pos.z;
 
-      // 判断是否从前方穿过到后方（Z 由大到小）
       if (prevZ > ringZ && currZ <= ringZ) {
-        // 距离圆环中心
-        const dx = drone.position.x - ring.position.x;
-        const dy = drone.position.y - ring.position.y;
+        const dx = plane.pos.x - ring.position.x;
+        const dy = plane.pos.y - ring.position.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist < 6) {
+        if (dist < 8) {
           ring.userData.passed = true;
           ring.material = ringPassedMat.clone();
           ringsPassed++;
@@ -648,28 +664,19 @@ function animate() {
       }
     }
 
-    // ===== 计分 & 通关 =====
+    // ===== HUD 更新 =====
     const elapsed = (performance.now() - startTime) / 1000;
     document.getElementById('uiTime').textContent = elapsed.toFixed(1);
+    document.getElementById('uiSpeed').textContent = Math.round(plane.speed);
+    document.getElementById('uiAlt').textContent = Math.round(plane.pos.y);
+    document.getElementById('throttleFill').style.height = (plane.throttle * 100) + '%';
 
-    // ===== 掉到地面以下 =====
-    if (drone.position.y <= 3 && droneState.speed < 20) {
-      gameOver('撞地了！');
-    }
-
-    // ===== 全部穿越 =====
+    // 结束条件
     if (ringsPassed >= RING_COUNT) {
       gameOver('全部穿越！', true);
-    }
-
-    // ===== 飞太远 =====
-    if (drone.position.z < -1500) {
+    } else if (plane.pos.z < -2000) {
       gameOver('飞太远了！');
     }
-
-    // ===== HUD 更新 =====
-    const speedPct = ((droneState.speed - droneState.minSpeed) / (droneState.maxSpeed - droneState.minSpeed)) * 100;
-    document.getElementById('speed-fill').style.width = speedPct + '%';
   }
 
   renderer.render(scene, camera);
@@ -709,28 +716,16 @@ function showOverlay(title, sub, btnText, showStats = false) {
 
 function resetGame() {
   ringsPassed = 0;
-  drone.position.set(0, 30, 0);
-  droneState.yaw = 0;
-  droneState.pitch = 0;
-  droneState.roll = 0;
-  droneState.speed = 30;
-  input.yaw = 0;
-  input.pitch = 0;
+  plane.pos.set(0, 30, 0);
+  plane.yaw = 0;
+  plane.pitch = 0;
+  plane.roll = 0;
+  plane.yawVel = 0;
+  plane.pitchVel = 0;
+  plane.speed = 40;
+  plane.throttle = 0.5;
 
-  // 重置圆环
-  let lastZ = -80;
-  for (let i = 0; i < rings.length; i++) {
-    const ring = rings[i];
-    ring.position.set(
-      (Math.random() - 0.5) * 60,
-      25 + (Math.random() - 0.5) * 30,
-      lastZ - 40 - Math.random() * 20
-    );
-    ring.rotation.z = (Math.random() - 0.5) * 0.3;
-    ring.userData.passed = false;
-    ring.material = ringMat.clone();
-    lastZ = ring.position.z;
-  }
+  generateRings();
 
   document.getElementById('uiRings').textContent = '0';
   document.getElementById('uiTime').textContent = '0.0';
@@ -751,7 +746,6 @@ function gameOver(reason, allCleared = false) {
   state = 'dead';
   const elapsed = (performance.now() - startTime) / 1000;
 
-  // 保存最佳
   if (ringsPassed > bestRings) {
     bestRings = ringsPassed;
     localStorage.setItem('fpv_best_rings', String(bestRings));
@@ -760,7 +754,6 @@ function gameOver(reason, allCleared = false) {
 
   showOverlay('飞行结束', reason, '再来一次', true);
 
-  // 提交分数
   try {
     const playerName = localStorage.getItem('player_name') || '匿名玩家';
     const score = ringsPassed * 100 + Math.max(0, Math.floor(3000 - elapsed * 10));
@@ -789,6 +782,12 @@ addEventListener('resize', () => {
 });
 
 document.getElementById('uiBest').textContent = bestRings;
+
+// 手机显示触摸控件
+if (isTouch) {
+  document.getElementById('touchControls').classList.add('active');
+}
+
 animate();
 </script>
 </body>
