@@ -45,7 +45,7 @@ type AdminLog = {
   created_at: string;
 };
 
-type Tab = 'announce' | 'games' | 'users' | 'stats' | 'logs' | 'messages';
+type Tab = 'announce' | 'games' | 'users' | 'stats' | 'logs' | 'messages' | 'comments';
 
 export default function AdminPage() {
   const [password, setPassword] = useState('');
@@ -89,6 +89,10 @@ export default function AdminPage() {
   const [adminMessages, setAdminMessages] = useState<any[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
 
+    // ===== 游戏评论 =====
+  const [adminComments, setAdminComments] = useState<any[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+
   // ============ 数据加载 ============
   async function loadAnnouncements() {
     try {
@@ -129,6 +133,16 @@ export default function AdminPage() {
       setLogs(d.data || []);
     } catch {}
   }
+    async function loadAdminComments() {
+    setCommentsLoading(true);
+    try {
+      const res = await fetch(`/api/comments?limit=500&t=${Date.now()}`, { cache: 'no-store' });
+      const d = await res.json();
+      setAdminComments(d.data || []);
+    } catch {}
+    setCommentsLoading(false);
+  }
+
     async function loadAdminMessages() {
     setMessagesLoading(true);
     try {
@@ -156,6 +170,7 @@ export default function AdminPage() {
     else if (tab === 'stats') loadStats(password);
     else if (tab === 'logs') loadLogs(password);
     else if (tab === 'messages') loadAdminMessages();
+    else if (tab === 'comments') loadAdminComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, logged]);
 
@@ -254,6 +269,7 @@ export default function AdminPage() {
           { key: 'games', label: '🎮 游戏' },
           { key: 'users', label: '👥 用户' },
           { key: 'messages', label: '💬 留言' },
+          { key: 'comments', label: '⭐ 评论' },
           { key: 'stats', label: '📊 统计' },
           { key: 'logs', label: '📋 日志' },
         ].map((t) => (
@@ -736,6 +752,83 @@ export default function AdminPage() {
           )}
         </>
       )}
+            {/* ============ 评论 Tab ============ */}
+      {tab === 'comments' && (
+        <div className="glass-card p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold">⭐ 游戏评论（{adminComments.length}）</h2>
+            <button
+              onClick={loadAdminComments}
+              disabled={commentsLoading}
+              className="text-xs px-3 py-1.5 rounded-lg bg-white/70 dark:bg-white/10 hover:bg-white/90 transition disabled:opacity-50"
+            >
+              {commentsLoading ? '加载中…' : '🔄 刷新'}
+            </button>
+          </div>
+
+          {commentsLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-20 rounded-lg animate-pulse bg-white/40 dark:bg-white/5" />
+              ))}
+            </div>
+          ) : adminComments.length === 0 ? (
+            <div className="text-center py-10 text-gray-400 text-sm">
+              <div className="text-4xl mb-2">⭐</div>
+              还没有游戏评论
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {adminComments.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-start gap-3 p-3 rounded-xl bg-white/50 dark:bg-white/5 border border-white/40 dark:border-white/10"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 flex-wrap mb-1">
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-500 font-medium">
+                        {c.game_key}
+                      </span>
+                      <span className="font-semibold text-sm">{c.player_name}</span>
+                      <span className="text-yellow-400 text-xs">
+                        {'★'.repeat(c.rating)}{'☆'.repeat(5 - c.rating)}
+                      </span>
+                      <span className="text-[10px] text-gray-400 ml-auto">
+                        {formatDate(c.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
+                      {c.content}
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`确定删除这条评论？\n\n「${c.content.slice(0, 30)}${c.content.length > 30 ? '…' : ''}」`)) return;
+                      try {
+                        const res = await fetch(
+                          `/api/comments?id=${c.id}&password=${encodeURIComponent(password)}`,
+                          { method: 'DELETE' }
+                        );
+                        if (!res.ok) {
+                          const d = await res.json();
+                          throw new Error(d.error || '删除失败');
+                        }
+                        setAdminComments((list) => list.filter((x) => x.id !== c.id));
+                      } catch (e: any) {
+                        alert(e.message);
+                      }
+                    }}
+                    className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition"
+                  >
+                    删除
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
             {/* ============ 留言 Tab ============ */}
       {tab === 'messages' && (
         <div className="glass-card p-5 sm:p-6">

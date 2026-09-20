@@ -25,20 +25,21 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const game = searchParams.get('game');
-    const limit = Math.min(Number(searchParams.get('limit')) || 50, 200);
+    const limit = Math.min(Number(searchParams.get('limit')) || 50, 500);
 
-    if (!game) {
-      return NextResponse.json({ error: '缺少 game 参数' }, { status: 400 });
-    }
-
-    const { data, error } = await supabase
+    let query = supabase
       .from('game_comments')
       .select('id, game_key, device_id, player_name, avatar, content, rating, created_at')
-      .eq('game_key', game)
       .eq('is_deleted', false)
       .order('created_at', { ascending: false })
       .limit(limit);
 
+    // game 参数可选：不传则返回所有评论
+    if (game) {
+      query = query.eq('game_key', game);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
 
     // 计算平均分
