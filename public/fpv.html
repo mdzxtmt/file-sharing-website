@@ -762,7 +762,7 @@ function animate() {
     // ============================================================
     raycaster.setFromCamera(mouseNDC, camera);
     const targetWaypoint = new THREE.Vector3();
-    raycaster.ray.at(5000, targetWaypoint);
+    raycaster.ray.at(50000, targetWaypoint);
 
     // ============================================================
     // 2. 目标点转飞机局部空间
@@ -804,12 +804,12 @@ function animate() {
     jetState.angularVelocity.y += yawTorque * dt;
     jetState.angularVelocity.z += rollTorque * dt;
 
-    // 空气阻尼
+    // 空气阻尼（和 BVR 一致）
     const aeroDamping = 1.0 + (jetState.speed / jetState.maxSpeed) * 1.5;
     jetState.angularVelocity.multiplyScalar(Math.max(0, 1.0 - aeroDamping * dt));
 
     // 过载限制
-    const maxPitchOmega = 4.5 * 9.8 / Math.max(jetState.speed, 1.0);
+    const maxPitchOmega = ((20 - 1.0) * 9.8) / Math.max(jetState.speed, 1.0);
     jetState.angularVelocity.x = Math.max(-maxPitchOmega, Math.min(maxPitchOmega, jetState.angularVelocity.x));
 
     // ============================================================
@@ -856,23 +856,23 @@ function animate() {
     jetState.gForce = 1.0 + Math.abs(jetState.angularVelocity.x * jetState.speed) / 9.8;
 
     // ============================================================
-    // 8. 第三人称相机（跟随飞机后方）
+    // 8. 第三人称相机（BVR 风格）
     // ============================================================
-    const camOffset = new THREE.Vector3(0, 6, 30).applyQuaternion(jet.quaternion);
+    const camOffset = new THREE.Vector3(0, 20, 70).applyQuaternion(jet.quaternion);
     const camTarget = jet.position.clone().add(camOffset);
     if (camTarget.y < 5) camTarget.y = 5;
 
-    camera.position.lerp(camTarget, dt * 5);
+    camera.position.lerp(camTarget, dt * 7);
 
     // 看向飞机前方
     const lookAhead = jet.position.clone()
-      .add(new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion).multiplyScalar(40));
+      .add(new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion).multiplyScalar(300));
     camera.lookAt(lookAhead);
 
-    // 相机轻微滚转
+    // 相机跟随滚转
     const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(jet.quaternion);
     const camBank = Math.asin(Math.max(-1, Math.min(1, camRight.y)));
-    camera.rotateZ(-camBank * 0.3);
+    camera.rotateZ(-camBank * 0.6);
 
     // ============================================================
     // 9. 开火
