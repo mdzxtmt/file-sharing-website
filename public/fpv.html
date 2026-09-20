@@ -26,6 +26,7 @@
   .stat .label { font-size:10px; letter-spacing:2px; color:#6b87a8; margin-bottom:2px; }
   .stat .val { font-size:19px; font-weight:700; color:#a5e8ff; font-variant-numeric:tabular-nums; }
 
+  /* 真实机头方向准星（中央） */
   #crosshair {
     position:absolute; left:50%; top:50%; width:34px; height:34px;
     transform:translate(-50%,-50%);
@@ -37,17 +38,18 @@
   #crosshair::before { left:50%; top:0; width:2px; height:34px; transform:translateX(-50%); }
   #crosshair::after { top:50%; left:0; height:2px; width:34px; transform:translateY(-50%); }
 
+  /* 鼠标位置（目标方向） */
   #aimTarget {
-    position:absolute; width:56px; height:56px;
-    border:2px solid rgba(255,255,255,0.85);
+    position:absolute; width:52px; height:52px;
+    border:2px solid rgba(120,220,255,0.8);
     border-radius:50%;
     transform:translate(-50%,-50%);
-    box-shadow:0 0 12px rgba(0,0,0,0.4);
-    transition:border-color 0.15s;
+    box-shadow:0 0 12px rgba(0,0,0,0.5);
+    transition:border-color 0.1s;
   }
   #aimTarget.locked {
     border-color:rgba(80,255,140,0.95);
-    box-shadow:0 0 18px rgba(80,255,140,0.6);
+    box-shadow:0 0 18px rgba(80,255,140,0.7);
   }
 
   #throttlePanel {
@@ -240,7 +242,7 @@
     <div><span class="v" id="ovTime">0.0</span><span class="k">TIME</span></div>
   </div>
   <div class="keys">
-    <b>鼠标移动</b><span>控制瞄准方向</span>
+    <b>鼠标移动</b><span>牵引机头方向</span>
     <b>W / S</b><span>加/减油门</span>
     <b>A / D</b><span>左右滚转</span>
     <b>空格</b><span>开火</span>
@@ -253,25 +255,12 @@
 import * as THREE from '/three.module.js';
 
 /* ============================================================
-   控制模式（纯手动切换）
+   控制模式
    ============================================================ */
 let controlMode = (() => {
   try {
     const saved = localStorage.getItem('jet_control');
-    if (slet controlMode = (() => {
-  try {
-    const saved = localStorage.getItem('jet_control');
     if (saved === 'touch' || saved === 'keyboard') return saved;
-  } catch {}
-  return 'keyboard';
-})();
-
-// 指针锁定状态
-let pointerLocked = false;
-// 虚拟准星偏移（-1 到 1，屏幕中心为 0）
-let virtualAimX = 0;
-let virtualAimY = 0;
-const AIM_SENSITIVITY = 0.0035; // 鼠标灵敏度aved === 'touch' || saved === 'keyboard') return saved;
   } catch {}
   return 'keyboard';
 })();
@@ -328,7 +317,7 @@ sun.shadow.camera.bottom = -500;
 sun.shadow.camera.far = 2000;
 scene.add(sun);
 
-/* 天空穹顶 */
+/* 天空 */
 const skyCanvas = document.createElement('canvas');
 skyCanvas.width = 2;
 skyCanvas.height = 512;
@@ -368,23 +357,15 @@ ground.geometry.computeVertexNormals();
 ground.position.y = -200;
 scene.add(ground);
 
-const grid = new THREE.GridHelper(20000, 200, 0x3a6b2a, 0x3a6b2a);
-grid.position.y = -199;
-grid.material.opacity = 0.15;
-grid.material.transparent = true;
-scene.add(grid);
-
 /* 云层 */
 const cloudGroup = new THREE.Group();
 scene.add(cloudGroup);
 const cloudMat = new THREE.MeshLambertMaterial({
-  color: 0xffffff,
-  transparent: true,
-  opacity: 0.75,
+  color: 0xffffff, transparent: true, opacity: 0.75,
 });
 
 for (let i = 0; i < 60; i++) {
-  const cloudCluster = new THREE.Group();
+  const cluster = new THREE.Group();
   const blocks = 4 + Math.floor(Math.random() * 4);
   for (let j = 0; j < blocks; j++) {
     const c = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), cloudMat);
@@ -398,14 +379,14 @@ for (let i = 0; i < 60; i++) {
       (Math.random() - 0.5) * 80,
       (Math.random() - 0.5) * 600
     );
-    cloudCluster.add(c);
+    cluster.add(c);
   }
-  cloudCluster.position.set(
+  cluster.position.set(
     (Math.random() - 0.5) * 10000,
     400 + Math.random() * 800,
     (Math.random() - 0.5) * 10000
   );
-  cloudGroup.add(cloudCluster);
+  cloudGroup.add(cluster);
 }
 
 /* ============================================================
@@ -558,17 +539,17 @@ let kills = 0;
 let startTime = 0;
 let bestKills = parseInt(localStorage.getItem('jet_best_kills') || '0', 10);
 
+// 飞行状态
 const jetState = {
-  yaw: 0,
-  pitch: 0,
-  roll: 0,
-  yawVel: 0,
-  pitchVel: 0,
+  pos: new THREE.Vector3(0, 500, 0),
+  quat: new THREE.Quaternion(),
+  angularVelocity: new THREE.Vector3(),  // 局部空间角速度
   speed: 300,
   throttle: 0.6,
   maxSpeed: 500,
   minSpeed: 180,
   fireCooldown: 0,
+  gForce: 1.0,
 };
 
 const keys = {};
@@ -576,26 +557,15 @@ const keys = {};
 /* ============================================================
    输入
    ============================================================ */
-let pointerX = innerWidth / 2;
-let pointerY = innerHeight / 2;
+// 鼠标 NDC 坐标
+const mouseNDC = new THREE.Vector2(0, 0);
+const raycaster = new THREE.Raycaster();
 
 document.addEventListener('mousemove', (e) => {
   if (isTouch) return;
   if (state !== 'playing') return;
-  if (!pointerLocked) return;
-
-  // 相对移动 → 移动虚拟准星
-  virtualAimX += e.movementX * AIM_SENSITIVITY;
-  virtualAimY += e.movementY * AIM_SENSITIVITY;
-
-  // 限制范围
-  virtualAimX = Math.max(-1, Math.min(1, virtualAimX));
-  virtualAimY = Math.max(-1, Math.min(1, virtualAimY));
-});
-
-// 监听指针锁定状态
-document.addEventListener('pointerlockchange', () => {
-  pointerLocked = document.pointerLockElement === document.body;
+  mouseNDC.x = (e.clientX / innerWidth) * 2 - 1;
+  mouseNDC.y = -(e.clientY / innerHeight) * 2 + 1;
 });
 
 // 触摸拖动
@@ -607,8 +577,8 @@ document.addEventListener('touchstart', (e) => {
   if (t.target.id === 'backBtn' || t.target.id === 'ctrlToggle') return;
   if (touchLookId === null) {
     touchLookId = t.identifier;
-    pointerX = t.clientX;
-    pointerY = t.clientY;
+    mouseNDC.x = (t.clientX / innerWidth) * 2 - 1;
+    mouseNDC.y = -(t.clientY / innerHeight) * 2 + 1;
   }
 }, { passive: false });
 
@@ -616,8 +586,8 @@ document.addEventListener('touchmove', (e) => {
   if (!isTouch || state !== 'playing') return;
   for (const t of e.changedTouches) {
     if (t.identifier === touchLookId) {
-      pointerX = t.clientX;
-      pointerY = t.clientY;
+      mouseNDC.x = (t.clientX / innerWidth) * 2 - 1;
+      mouseNDC.y = -(t.clientY / innerHeight) * 2 + 1;
       e.preventDefault();
     }
   }
@@ -629,17 +599,16 @@ document.addEventListener('touchend', (e) => {
   }
 });
 
+// 键盘
 addEventListener('keydown', (e) => {
   keys[e.code] = true;
   if (e.code === 'Escape') {
     if (state === 'playing') {
       state = 'paused';
-      document.exitPointerLock?.();
       showOverlay('已暂停', '按 ESC 继续', '继续飞行', false);
     } else if (state === 'paused') {
       state = 'playing';
       hideOverlay();
-      if (!isTouch) document.body.requestPointerLock?.();
     }
   }
   if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
@@ -669,9 +638,8 @@ function fireBullet() {
   if (jetState.fireCooldown > 0) return;
   jetState.fireCooldown = 0.08;
 
-  const dir = new THREE.Vector3(0, 0, -1).applyEuler(
-    new THREE.Euler(jetState.pitch, jetState.yaw, 0, 'YXZ')
-  );
+  // 机头方向 = 局部 -Z 转到世界
+  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion);
 
   const spawnPos = jet.position.clone().add(dir.clone().multiplyScalar(6));
 
@@ -770,14 +738,15 @@ function updateEffects(dt) {
    主循环
    ============================================================ */
 const clock = new THREE.Clock();
-const MAX_YAW_ANGLE = 1.3;    // 鼠标到边缘时，机头最多偏转约 75°
-const MAX_PITCH_ANGLE = 0.9;  // 鼠标到边缘时，机头最多俯仰约 52°
-const DEADZONE = 0.05;        // 死区很小，鼠标一动就开始转
+const tmpQuat = new THREE.Quaternion();
+const tmpVec = new THREE.Vector3();
+const tmpEuler = new THREE.Euler(0, 0, 0, 'YXZ');
 
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
 
+  // 尾焰
   if (flame) {
     const flick = 0.85 + Math.random() * 0.3;
     flame.scale.z = (0.5 + jetState.throttle * 1.5) * flick;
@@ -788,27 +757,74 @@ function animate() {
   }
 
   if (state === 'playing') {
-    // ===== 虚拟准星 → 目标朝向 =====
-    const targetYaw = -virtualAimX * MAX_YAW_ANGLE;
-    const targetPitch = -virtualAimY * MAX_PITCH_ANGLE;
+    // ============================================================
+    // 1. 鼠标位置 → 世界空间目标点
+    // ============================================================
+    raycaster.setFromCamera(mouseNDC, camera);
+    const targetWaypoint = new THREE.Vector3();
+    raycaster.ray.at(5000, targetWaypoint);
 
-    // 快速跟随（越快越灵敏）
-    const followSpeed = 10;
-    jetState.yaw += (targetYaw - jetState.yaw) * dt * followSpeed;
-    jetState.pitch += (targetPitch - jetState.pitch) * dt * followSpeed;
+    // ============================================================
+    // 2. 目标点转飞机局部空间
+    // ============================================================
+    jet.updateMatrixWorld();
+    tmpQuat.copy(jet.quaternion).invert();
+    const localTarget = targetWaypoint.clone()
+      .sub(jet.position)
+      .applyQuaternion(tmpQuat)
+      .normalize();
 
-    const targetRoll = -mx * 1.0;
-    jetState.roll += (targetRoll - jetState.roll) * dt * 4;
+    // 误差
+    const pitchError = localTarget.y;       // 抬头为正
+    const yawError = -localTarget.x;        // 左转为正
 
-    if (keys['KeyA'] || keys['ArrowLeft']) {
-      jetState.roll -= dt * 3;
-      jetState.yawVel -= dt * 2;
-    }
-    if (keys['KeyD'] || keys['ArrowRight']) {
-      jetState.roll += dt * 3;
-      jetState.yawVel += dt * 2;
-    }
+    // ============================================================
+    // 3. 目标 bank 角（转弯时自动倾斜）
+    // ============================================================
+    let targetBank = yawError * 3.8;
+    targetBank = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, targetBank));
 
+    // 键盘微调
+    if (keys['KeyA'] || keys['ArrowLeft']) targetBank = Math.PI / 1.5;
+    if (keys['KeyD'] || keys['ArrowRight']) targetBank = -Math.PI / 1.5;
+
+    // 当前 bank 角
+    const localRight = new THREE.Vector3(1, 0, 0).applyQuaternion(jet.quaternion);
+    const currentBank = Math.asin(Math.max(-1, Math.min(1, localRight.y)));
+    const bankError = targetBank - currentBank;
+
+    // ============================================================
+    // 4. 三轴扭矩
+    // ============================================================
+    const pitchTorque = (pitchError * 18.0) + (Math.abs(currentBank) * 1.5) - (jetState.angularVelocity.x * 4.5);
+    const yawTorque = (yawError * 4.0) - (jetState.angularVelocity.y * 5.0);
+    const rollTorque = (bankError * 15.0) - (jetState.angularVelocity.z * 3.0);
+
+    jetState.angularVelocity.x += pitchTorque * dt;
+    jetState.angularVelocity.y += yawTorque * dt;
+    jetState.angularVelocity.z += rollTorque * dt;
+
+    // 空气阻尼
+    const aeroDamping = 1.0 + (jetState.speed / jetState.maxSpeed) * 1.5;
+    jetState.angularVelocity.multiplyScalar(Math.max(0, 1.0 - aeroDamping * dt));
+
+    // 过载限制
+    const maxPitchOmega = 4.5 * 9.8 / Math.max(jetState.speed, 1.0);
+    jetState.angularVelocity.x = Math.max(-maxPitchOmega, Math.min(maxPitchOmega, jetState.angularVelocity.x));
+
+    // ============================================================
+    // 5. 四元数姿态积分
+    // ============================================================
+    const w = jetState.angularVelocity;
+    const q = jet.quaternion;
+    const qSpin = new THREE.Quaternion(w.x * dt * 0.5, w.y * dt * 0.5, w.z * dt * 0.5, 0);
+    const qDelta = q.clone().multiply(qSpin);
+    q.x += qDelta.x; q.y += qDelta.y; q.z += qDelta.z; q.w += qDelta.w;
+    q.normalize();
+
+    // ============================================================
+    // 6. 油门
+    // ============================================================
     if (keys['KeyW'] || keys['ArrowUp'] || touchThrottleUp) {
       jetState.throttle = Math.min(1, jetState.throttle + dt * 0.5);
     }
@@ -819,40 +835,56 @@ function animate() {
     const targetSpeed = jetState.minSpeed + jetState.throttle * (jetState.maxSpeed - jetState.minSpeed);
     jetState.speed += (targetSpeed - jetState.speed) * dt * 1.0;
 
-    const euler = new THREE.Euler(jetState.pitch, jetState.yaw, 0, 'YXZ');
-    const dir = new THREE.Vector3(0, 0, -1).applyEuler(euler);
-    jet.position.addScaledVector(dir, jetState.speed * dt);
+    // ============================================================
+    // 7. 前进（沿机头方向）
+    // ============================================================
+    jet.translateZ(-jetState.speed * dt);
 
-    if (jet.position.y < 30) { jet.position.y = 30; jetState.pitch = Math.max(0, jetState.pitch); }
-    if (jet.position.y > 3000) { jet.position.y = 3000; jetState.pitch = Math.min(0, jetState.pitch); }
+    // 高度保护
+    if (jet.position.y < 30) {
+      jet.position.y = 30;
+      // 强制抬头
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion);
+      if (forward.y < 0) {
+        const pitchAdjust = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.05, 0, 0, 'YXZ'));
+        jet.quaternion.multiply(pitchAdjust);
+      }
+    }
+    if (jet.position.y > 3000) jet.position.y = 3000;
 
-    jet.rotation.order = 'YXZ';
-    jet.rotation.y = jetState.yaw;
-    jet.rotation.x = jetState.pitch;
-    jet.rotation.z = jetState.roll;
+    // 过载计算
+    jetState.gForce = 1.0 + Math.abs(jetState.angularVelocity.x * jetState.speed) / 9.8;
 
-    const camBack = new THREE.Vector3(0, 8, 35).applyEuler(
-      new THREE.Euler(jetState.pitch * 0.7, jetState.yaw, 0, 'YXZ')
-    );
-    const camTarget = jet.position.clone().add(camBack);
-
+    // ============================================================
+    // 8. 第三人称相机（跟随飞机后方）
+    // ============================================================
+    const camOffset = new THREE.Vector3(0, 6, 30).applyQuaternion(jet.quaternion);
+    const camTarget = jet.position.clone().add(camOffset);
     if (camTarget.y < 5) camTarget.y = 5;
 
-    camera.position.lerp(camTarget, dt * 4);
+    camera.position.lerp(camTarget, dt * 5);
 
-    const lookDir = new THREE.Vector3(0, 0, -1).applyEuler(
-      new THREE.Euler(jetState.pitch, jetState.yaw, 0, 'YXZ')
-    );
-    const lookPoint = jet.position.clone().addScaledVector(lookDir, 50);
-    camera.lookAt(lookPoint);
+    // 看向飞机前方
+    const lookAhead = jet.position.clone()
+      .add(new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion).multiplyScalar(40));
+    camera.lookAt(lookAhead);
 
-    camera.rotation.z = jetState.roll * 0.2;
+    // 相机轻微滚转
+    const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(jet.quaternion);
+    const camBank = Math.asin(Math.max(-1, Math.min(1, camRight.y)));
+    camera.rotateZ(-camBank * 0.3);
 
+    // ============================================================
+    // 9. 开火
+    // ============================================================
     if ((keys['Space'] || touchFire) && jetState.fireCooldown <= 0) {
       fireBullet();
     }
     if (jetState.fireCooldown > 0) jetState.fireCooldown -= dt;
 
+    // ============================================================
+    // 10. 目标 AI
+    // ============================================================
     for (const t of targets) {
       if (!t.alive) continue;
       t.wanderTimer -= dt;
@@ -868,6 +900,9 @@ function animate() {
       t.group.rotation.y += dt * 0.5;
     }
 
+    // ============================================================
+    // 11. HUD
+    // ============================================================
     const elapsed = (performance.now() - startTime) / 1000;
     document.getElementById('uiTime').textContent = elapsed.toFixed(1);
     document.getElementById('uiSpeed').textContent = Math.round(jetState.speed);
@@ -875,18 +910,20 @@ function animate() {
     document.getElementById('throttleFill').style.height = (jetState.throttle * 100) + '%';
     document.getElementById('throttleText').textContent = Math.round(jetState.throttle * 100) + '%';
 
-    // 虚拟准星位置：屏幕中心 + 偏移
+    // 鼠标目标圈（屏幕上的鼠标位置）
     const aimEl = document.getElementById('aimTarget');
-    const screenX = innerWidth / 2 + virtualAimX * (innerWidth / 2 - 60);
-    const screenY = innerHeight / 2 + virtualAimY * (innerHeight / 2 - 60);
+    const screenX = (mouseNDC.x * 0.5 + 0.5) * innerWidth;
+    const screenY = (-mouseNDC.y * 0.5 + 0.5) * innerHeight;
     aimEl.style.left = screenX + 'px';
     aimEl.style.top = screenY + 'px';
 
-    // 准星接近中心 → 变绿
-    const d = Math.hypot(virtualAimX, virtualAimY);
-    if (d < 0.08) aimEl.classList.add('locked');
+    // 机头对准鼠标 → 变绿
+    const dot = new THREE.Vector3(0, 0, -1).applyQuaternion(jet.quaternion)
+      .dot(new THREE.Vector3().subVectors(targetWaypoint, jet.position).normalize());
+    if (dot > 0.995) aimEl.classList.add('locked');
     else aimEl.classList.remove('locked');
 
+    // 结束
     if (kills >= TARGET_COUNT) {
       gameOver('全部击落！');
     }
@@ -933,14 +970,13 @@ function showOverlay(title, sub, btnText, showStats = false) {
 function resetGame() {
   kills = 0;
   jet.position.set(0, 500, 0);
-  jetState.yaw = 0;
-  jetState.pitch = 0;
-  jetState.roll = 0;
-  jetState.yawVel = 0;
-  jetState.pitchVel = 0;
+  jet.quaternion.identity();
+
+  jetState.angularVelocity.set(0, 0, 0);
   jetState.speed = 300;
   jetState.throttle = 0.6;
   jetState.fireCooldown = 0;
+  jetState.gForce = 1.0;
 
   for (const b of bullets) scene.remove(b.mesh);
   bullets.length = 0;
@@ -953,8 +989,8 @@ function resetGame() {
   document.getElementById('uiTime').textContent = '0.0';
   document.getElementById('uiBest').textContent = bestKills;
 
-  pointerX = innerWidth / 2;
-  pointerY = innerHeight / 2;
+  mouseNDC.x = 0;
+  mouseNDC.y = 0;
 }
 
 function startGame() {
@@ -962,22 +998,7 @@ function startGame() {
   state = 'playing';
   startTime = performance.now();
   hideOverlay();
-
-  // 重置虚拟准星
-  virtualAimX = 0;
-  virtualAimY = 0;
-
-  // 键鼠模式 → 请求指针锁定
-  if (!isTouch) {
-    document.body.requestPointerLock?.();
-  }
 }
-function resumeGame() {
-  state = 'playing';
-  hideOverlay();
-  if (!isTouch) document.body.requestPointerLock?.();
-}
-
 
 function gameOver(reason) {
   state = 'dead';
@@ -1020,7 +1041,6 @@ addEventListener('resize', () => {
 
 document.getElementById('uiBest').textContent = bestKills;
 
-// ===== 初始化 =====
 document.getElementById('ctrlToggle').addEventListener('click', toggleCtrlMode);
 updateCtrlBtn();
 applyCtrlMode();
