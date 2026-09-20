@@ -423,6 +423,12 @@ export default function PointsPage() {
                       <span className="font-bold text-orange-500">{(previewRate * 100).toFixed(1)}%</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-gray-500">立刻还需还</span>
+                      <span className="font-bold text-red-500">
+                        {previewAmount + Math.floor(previewAmount * previewRate * 1)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-gray-500">借 7 天需还</span>
                       <span className="font-bold text-red-500">
                         {previewAmount + Math.floor(previewAmount * previewRate * 7)}

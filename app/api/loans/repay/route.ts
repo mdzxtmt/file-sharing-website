@@ -16,10 +16,8 @@ const supabase = createClient(
 );
 
 function calcDebt(loan: any) {
-  const days = Math.max(
-    0,
-    Math.floor((Date.now() - new Date(loan.borrowed_at).getTime()) / (1000 * 60 * 60 * 24))
-  );
+  const hoursPassed = (Date.now() - new Date(loan.borrowed_at).getTime()) / (1000 * 60 * 60);
+  const days = Math.floor(hoursPassed / 24) + 1;
   const interest = Math.floor(loan.principal * Number(loan.interest_rate) * days);
   const total = loan.principal + interest;
   const remaining = Math.max(0, total - loan.repaid);
