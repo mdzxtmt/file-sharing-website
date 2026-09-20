@@ -79,7 +79,58 @@ export async function POST(req: NextRequest) {
     }
     const payout = betAmount * multiplier;
     const profit = payout - betAmount;
-    const newPoints = user.points - betAmount + payout;
+    let newPoints = user.points - betAmount + payout;
+    let autoPaid = 0;
+
+    // ===== 如果赢了，自动抵扣欠款 =====
+    if (profit > 0) {
+      const { data: loans } = await supabase
+        .from('loans')
+        .select('*')
+        .eq('device_id', device_id)
+        .eq('is_cleared', false)
+        .order('borrowed_at', { ascending: true });
+
+      let left = profit;
+      if (loans && loans.length > 0) {
+        for (const loan of loans) {
+          if (left <= 0) break;
+          const days = Math.max(
+            0,
+            Math.floor((Date.now() - new Date(loan.borrowed_at).getTime()) / (1000 * 60 * 60 * 24))
+          );
+          const interest = Math.floor(loan.principal * Number(loan.interest_rate) * days);
+          const total = loan.principal + interest;
+          const remaining = Math.max(0, total - loan.repaid);
+          const pay = Math.min(left, remaining);
+          const newRepaid = loan.repaid + pay;
+          const cleared = newRepaid >= total;
+
+          await supabase
+            .from('loans')
+            .update({
+              repaid: newRepaid,
+              is_cleared: cleared,
+              cleared_at: cleared ? new Date().toISOString() : null,
+            })
+            .eq('id', loan.id);
+
+          left -= pay;
+          autoPaid += pay;
+        }
+
+        // 抵扣的部分从 newPoints 里减去
+        newPoints -= autoPaid;
+
+        if (autoPaid > 0) {
+          await supabase.from('point_logs').insert([{
+            device_id,
+            amount: -autoPaid,
+            reason: `转盘收益自动抵扣欠款 ${autoPaid}`,
+          }]);
+        }
+      }
+    }
 
     // 更新
     const { error: updateErr } = await supabase
@@ -111,6 +162,7 @@ export async function POST(req: NextRequest) {
         multiplier,
         payout,
         profit,
+        auto_paid: autoPaid,
         points: newPoints,
         total_slots: WHEEL.length,
       },
