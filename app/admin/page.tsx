@@ -45,7 +45,7 @@ type AdminLog = {
   created_at: string;
 };
 
-type Tab = 'announce' | 'games' | 'users' | 'stats' | 'logs' | 'messages' | 'comments';
+type Tab = 'announce' | 'games' | 'users' | 'stats' | 'logs' | 'messages' | 'comments' | 'loans';
 
 export default function AdminPage() {
   const [password, setPassword] = useState('');
@@ -93,6 +93,12 @@ export default function AdminPage() {
   const [adminComments, setAdminComments] = useState<any[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
 
+    // ===== 借款 =====
+  const [adminLoans, setAdminLoans] = useState<any[]>([]);
+  const [loanStats, setLoanStats] = useState<any>(null);
+  const [loansLoading, setLoansLoading] = useState(false);
+  const [loanFilter, setLoanFilter] = useState<'all' | 'active' | 'cleared'>('active');
+
   // ============ 数据加载 ============
   async function loadAnnouncements() {
     try {
@@ -133,6 +139,20 @@ export default function AdminPage() {
       setLogs(d.data || []);
     } catch {}
   }
+    async function loadAdminLoans(filter = loanFilter) {
+    setLoansLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/loans?password=${encodeURIComponent(password)}&status=${filter}&limit=500&t=${Date.now()}`,
+        { cache: 'no-store' }
+      );
+      const d = await res.json();
+      setAdminLoans(d.data || []);
+      setLoanStats(d.stats || null);
+    } catch {}
+    setLoansLoading(false);
+  }
+
     async function loadAdminComments() {
     setCommentsLoading(true);
     try {
@@ -171,6 +191,7 @@ export default function AdminPage() {
     else if (tab === 'logs') loadLogs(password);
     else if (tab === 'messages') loadAdminMessages();
     else if (tab === 'comments') loadAdminComments();
+    else if (tab === 'loans') loadAdminLoans();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, logged]);
 
@@ -270,6 +291,7 @@ export default function AdminPage() {
           { key: 'users', label: '👥 用户' },
           { key: 'messages', label: '💬 留言' },
           { key: 'comments', label: '⭐ 评论' },
+          { key: 'loans', label: '💰 借款' },
           { key: 'stats', label: '📊 统计' },
           { key: 'logs', label: '📋 日志' },
         ].map((t) => (
@@ -752,6 +774,175 @@ export default function AdminPage() {
           )}
         </>
       )}
+            {/* ============ 借款 Tab ============ */}
+      {tab === 'loans' && (
+        <>
+          {/* 统计 */}
+          {loanStats && (
+            <div className="glass-card p-5 sm:p-6 mb-6">
+              <h2 className="text-base font-bold mb-4">📊 借款统计</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-xl p-3 bg-white/50 dark:bg-white/5 text-center">
+                  <div className="text-2xl font-bold text-indigo-500 tabular-nums">
+                    {loanStats.total}
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-1">总借款笔数</div>
+                </div>
+                <div className="rounded-xl p-3 bg-white/50 dark:bg-white/5 text-center">
+                  <div className="text-2xl font-bold text-red-500 tabular-nums">
+                    {loanStats.active_count}
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-1">未还清</div>
+                </div>
+                <div className="rounded-xl p-3 bg-white/50 dark:bg-white/5 text-center">
+                  <div className="text-2xl font-bold text-orange-500 tabular-nums">
+                    {loanStats.total_principal}
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-1">累计本金</div>
+                </div>
+                <div className="rounded-xl p-3 bg-white/50 dark:bg-white/5 text-center">
+                  <div className="text-2xl font-bold text-red-500 tabular-nums">
+                    {loanStats.total_debt}
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-1">待还总额</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 列表 */}
+          <div className="glass-card p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <h2 className="text-base font-bold">💰 借款记录（{adminLoans.length}）</h2>
+              <div className="flex gap-2">
+                <div className="flex gap-1 rounded-lg bg-white/50 dark:bg-white/5 p-1">
+                  {[
+                    { key: 'active', label: '未还清' },
+                    { key: 'cleared', label: '已还清' },
+                    { key: 'all', label: '全部' },
+                  ].map((f) => (
+                    <button
+                      key={f.key}
+                      onClick={() => {
+                        setLoanFilter(f.key as any);
+                        loadAdminLoans(f.key as any);
+                      }}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                        loanFilter === f.key
+                          ? 'bg-indigo-500 text-white'
+                          : 'hover:bg-white/60 dark:hover:bg-white/10'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => loadAdminLoans()}
+                  disabled={loansLoading}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-white/70 dark:bg-white/10 hover:bg-white/90 transition disabled:opacity-50"
+                >
+                  {loansLoading ? '加载中…' : '🔄'}
+                </button>
+              </div>
+            </div>
+
+            {loansLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-20 rounded-lg animate-pulse bg-white/40 dark:bg-white/5" />
+                ))}
+              </div>
+            ) : adminLoans.length === 0 ? (
+              <div className="text-center py-10 text-gray-400 text-sm">
+                <div className="text-4xl mb-2">💰</div>
+                没有借款记录
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {adminLoans.map((l) => (
+                  <div
+                    key={l.id}
+                    className={`p-3 rounded-xl border ${
+                      l.is_cleared
+                        ? 'bg-white/30 dark:bg-white/5 border-white/30 dark:border-white/10 opacity-70'
+                        : 'bg-red-500/5 border-red-500/20'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap mb-1">
+                          <span className="font-semibold text-sm">{l.player_name}</span>
+                          {l.is_cleared ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-600 font-medium">
+                              ✓ 已还清
+                            </span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-600 font-medium">
+                              欠款中
+                            </span>
+                          )}
+                          <span className="text-[10px] text-gray-400 ml-auto">
+                            {formatDate(l.borrowed_at)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                          <div>
+                            <div className="text-gray-500">本金</div>
+                            <div className="font-bold tabular-nums">{l.principal}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">日息</div>
+                            <div className="font-bold text-orange-500 tabular-nums">
+                              {(l.interest_rate * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">已借</div>
+                            <div className="font-bold tabular-nums">{l.days} 天</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">已还</div>
+                            <div className="font-bold text-green-500 tabular-nums">{l.repaid}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">待还</div>
+                            <div className="font-bold text-red-500 tabular-nums">
+                              {l.remaining}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`确定删除这笔借款？\n\n${l.player_name} · 本金 ${l.principal}`)) return;
+                          try {
+                            const res = await fetch(
+                              `/api/admin/loans?password=${encodeURIComponent(password)}&id=${l.id}`,
+                              { method: 'DELETE' }
+                            );
+                            if (!res.ok) {
+                              const d = await res.json();
+                              throw new Error(d.error || '删除失败');
+                            }
+                            setAdminLoans((list) => list.filter((x) => x.id !== l.id));
+                          } catch (e: any) {
+                            alert(e.message);
+                          }
+                        }}
+                        className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition"
+                      >
+                        删除
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
             {/* ============ 评论 Tab ============ */}
       {tab === 'comments' && (
         <div className="glass-card p-5 sm:p-6">
