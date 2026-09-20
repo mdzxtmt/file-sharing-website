@@ -258,7 +258,20 @@ import * as THREE from '/three.module.js';
 let controlMode = (() => {
   try {
     const saved = localStorage.getItem('jet_control');
+    if (slet controlMode = (() => {
+  try {
+    const saved = localStorage.getItem('jet_control');
     if (saved === 'touch' || saved === 'keyboard') return saved;
+  } catch {}
+  return 'keyboard';
+})();
+
+// 指针锁定状态
+let pointerLocked = false;
+// 虚拟准星偏移（-1 到 1，屏幕中心为 0）
+let virtualAimX = 0;
+let virtualAimY = 0;
+const AIM_SENSITIVITY = 0.0035; // 鼠标灵敏度aved === 'touch' || saved === 'keyboard') return saved;
   } catch {}
   return 'keyboard';
 })();
@@ -568,8 +581,21 @@ let pointerY = innerHeight / 2;
 
 document.addEventListener('mousemove', (e) => {
   if (isTouch) return;
-  pointerX = e.clientX;
-  pointerY = e.clientY;
+  if (state !== 'playing') return;
+  if (!pointerLocked) return;
+
+  // 相对移动 → 移动虚拟准星
+  virtualAimX += e.movementX * AIM_SENSITIVITY;
+  virtualAimY += e.movementY * AIM_SENSITIVITY;
+
+  // 限制范围
+  virtualAimX = Math.max(-1, Math.min(1, virtualAimX));
+  virtualAimY = Math.max(-1, Math.min(1, virtualAimY));
+});
+
+// 监听指针锁定状态
+document.addEventListener('pointerlockchange', () => {
+  pointerLocked = document.pointerLockElement === document.body;
 });
 
 // 触摸拖动
@@ -608,10 +634,12 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
     if (state === 'playing') {
       state = 'paused';
+      document.exitPointerLock?.();
       showOverlay('已暂停', '按 ESC 继续', '继续飞行', false);
     } else if (state === 'paused') {
       state = 'playing';
       hideOverlay();
+      if (!isTouch) document.body.requestPointerLock?.();
     }
   }
   if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
@@ -760,20 +788,12 @@ function animate() {
   }
 
   if (state === 'playing') {
-    // ===== 鼠标位置 → 目标朝向（绝对位置控制）=====
-    let mx = (pointerX / innerWidth) * 2 - 1;   // -1 ~ 1
-    let my = (pointerY / innerHeight) * 2 - 1;
+    // ===== 虚拟准星 → 目标朝向 =====
+    const targetYaw = -virtualAimX * MAX_YAW_ANGLE;
+    const targetPitch = -virtualAimY * MAX_PITCH_ANGLE;
 
-    // 死区（鼠标居中时直飞）
-    if (Math.abs(mx) < DEADZONE) mx = 0;
-    if (Math.abs(my) < DEADZONE) my = 0;
-
-    // 鼠标位置直接映射到目标偏航/俯仰角度
-    const targetYaw = -mx * MAX_YAW_ANGLE;
-    const targetPitch = -my * MAX_PITCH_ANGLE;
-
-    // 快速平滑跟随（数值越大越灵敏）
-    const followSpeed = 8;
+    // 快速跟随（越快越灵敏）
+    const followSpeed = 10;
     jetState.yaw += (targetYaw - jetState.yaw) * dt * followSpeed;
     jetState.pitch += (targetPitch - jetState.pitch) * dt * followSpeed;
 
@@ -855,11 +875,16 @@ function animate() {
     document.getElementById('throttleFill').style.height = (jetState.throttle * 100) + '%';
     document.getElementById('throttleText').textContent = Math.round(jetState.throttle * 100) + '%';
 
+    // 虚拟准星位置：屏幕中心 + 偏移
     const aimEl = document.getElementById('aimTarget');
-    aimEl.style.left = pointerX + 'px';
-    aimEl.style.top = pointerY + 'px';
-    const d = Math.hypot(pointerX - innerWidth / 2, pointerY - innerHeight / 2);
-    if (d < 40) aimEl.classList.add('locked');
+    const screenX = innerWidth / 2 + virtualAimX * (innerWidth / 2 - 60);
+    const screenY = innerHeight / 2 + virtualAimY * (innerHeight / 2 - 60);
+    aimEl.style.left = screenX + 'px';
+    aimEl.style.top = screenY + 'px';
+
+    // 准星接近中心 → 变绿
+    const d = Math.hypot(virtualAimX, virtualAimY);
+    if (d < 0.08) aimEl.classList.add('locked');
     else aimEl.classList.remove('locked');
 
     if (kills >= TARGET_COUNT) {
@@ -937,7 +962,22 @@ function startGame() {
   state = 'playing';
   startTime = performance.now();
   hideOverlay();
+
+  // 重置虚拟准星
+  virtualAimX = 0;
+  virtualAimY = 0;
+
+  // 键鼠模式 → 请求指针锁定
+  if (!isTouch) {
+    document.body.requestPointerLock?.();
+  }
 }
+function resumeGame() {
+  state = 'playing';
+  hideOverlay();
+  if (!isTouch) document.body.requestPointerLock?.();
+}
+
 
 function gameOver(reason) {
   state = 'dead';
