@@ -16,7 +16,7 @@ const supabase = createClient(
 );
 
 // 在线判定：5 分钟内有活动
-const ONLINE_WINDOW_MINUTES = 5;
+const ONLINE_WINDOW_MINUTES = 2;
 
 export async function GET() {
   try {

@@ -2,6 +2,7 @@ import './globals.css';
 import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import type { Metadata, Viewport } from 'next';
 import Navbar from '@/components/layout/Navbar';
+import Heartbeat from '@/components/layout/Heartbeat';
 
 export const metadata: Metadata = {
   title: 'mdzxtmt',
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body>
         <Navbar />
         <AnnouncementBar />
+        <Heartbeat />
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
       </body>
     </html>
