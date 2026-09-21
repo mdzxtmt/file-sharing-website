@@ -15,11 +15,11 @@ const supabase = createClient(
   }
 );
 
-// 阶梯利率
+// 阶梯利率（日息）
 function getInterestRate(amount: number): number {
-  if (amount >= 5000) return 0.03;
-  if (amount >= 1000) return 0.02;
-  return 0.01;
+  if (amount >= 5000) return 0.05; // 5000-10000：日息 5%
+  if (amount >= 1000) return 0.03; // 1000-4999：日息 3%
+  return 0.02;                     // 1-999：日息 2%
 }
 
 // 计算单笔欠款
