@@ -18,31 +18,31 @@ const supabase = createClient(
 const STOCKS = [
   { symbol: 'GOLD', basePrice: 100 },
   { symbol: 'TECH', basePrice: 200 },
-  { symbol: 'OIL',  basePrice: 80 },
+  { symbol: 'OIL', basePrice: 80 },
   { symbol: 'FOOD', basePrice: 50 },
   { symbol: 'BANK', basePrice: 150 },
 ];
 
-function getPrice(symbol: string, basePrice: number, timeMs: number): number {
-  const t = timeMs / 1000;
+// 新版价格公式（与 route.ts 完全一致）
+function getPrice(symbol: string, basePrice: number, t: number): number {
   const seed = symbol.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const wave1 = Math.sin(t * 0.2 + seed * 0.7) * 0.12;
-  const wave2 = Math.sin(t * 0.53 + seed * 1.3) * 0.07;
-  const wave3 = Math.sin(t * 1.27 + seed * 2.1) * 0.04;
-  return Math.round(basePrice * (1 + wave1 + wave2 + wave3));
+  const wave1 = Math.sin(t * 0.8 + seed * 0.7) * 0.25;
+  const wave2 = Math.sin(t * 1.9 + seed * 1.3) * 0.15;
+  const wave3 = Math.sin(t * 3.7 + seed * 2.1) * 0.08;
+  const jitter = Math.sin(t * 12.3 + seed * 5.7) * 0.04;
+  return Math.round(basePrice * (1 + wave1 + wave2 + wave3 + jitter));
 }
 
 export async function POST(req: NextRequest) {
   try {
     const { device_id, symbol, quantity } = await req.json();
-
     if (!device_id || !symbol) {
       return NextResponse.json({ error: '缺少参数' }, { status: 400 });
     }
 
     const qty = Number(quantity);
-    if (!Number.isFinite(qty) || qty < 1 || Math.floor(qty) !== qty) {
-      return NextResponse.json({ error: '数量必须是 ≥ 1 的整数' }, { status: 400 });
+    if (!Number.isFinite(qty) || qty < 1 || !Number.isInteger(qty)) {
+      return NextResponse.json({ error: '数量必须是正整数' }, { status: 400 });
     }
 
     const stock = STOCKS.find((s) => s.symbol === symbol);
@@ -50,12 +50,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '股票不存在' }, { status: 400 });
     }
 
-    // 当前价格
+    // 最新价格
     const now = Date.now();
     const price = getPrice(symbol, stock.basePrice, now);
     const total = price * qty;
 
-    // 检查持仓
+    // 持仓
     const { data: holding } = await supabase
       .from('stock_holdings')
       .select('*')
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     const profit = total - cost;
 
     // 记录交易
-    await supabase.from('stock_trades').insert([{
+    await supabase.from('stock_trades').insert({
       device_id,
       symbol,
       type: 'sell',
@@ -100,14 +100,14 @@ export async function POST(req: NextRequest) {
       price,
       total,
       profit,
-    }]);
+    });
 
     // 积分流水
-    await supabase.from('point_logs').insert([{
+    await supabase.from('point_logs').insert({
       device_id,
       amount: total,
-      reason: `卖出 ${symbol} × ${qty} @ ${price}（${profit >= 0 ? '+' : ''}${profit}）`,
-    }]);
+      reason: `卖出 ${symbol} × ${qty} @ ${price} (${profit >= 0 ? '+' : ''}${profit})`,
+    });
 
     return NextResponse.json({
       success: true,

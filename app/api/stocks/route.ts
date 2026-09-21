@@ -17,29 +17,27 @@ const supabase = createClient(
 
 // 股票定义（前后端一致）
 export const STOCKS = [
-  { symbol: 'GOLD', name: '黄金矿业', icon: '🥇', basePrice: 100 },
-  { symbol: 'TECH', name: '科技龙头', icon: '💻', basePrice: 200 },
-  { symbol: 'OIL',  name: '石油集团', icon: '🛢️', basePrice: 80 },
-  { symbol: 'FOOD', name: '食品公司', icon: '🍔', basePrice: 50 },
-  { symbol: 'BANK', name: '银行控股', icon: '🏦', basePrice: 150 },
+  { symbol: 'GOLD', name: '黄金矿业', icon: '🪙', basePrice: 100 },
+  { symbol: 'TECH', name: '科技巨头', icon: '💻', basePrice: 200 },
+  { symbol: 'OIL', name: '石油能源', icon: '🛢️', basePrice: 80 },
+  { symbol: 'FOOD', name: '食品消费', icon: '🍔', basePrice: 50 },
+  { symbol: 'BANK', name: '银行金融', icon: '🏦', basePrice: 150 },
 ];
 
-// 确定性价格公式（前后端一致）
-export function getPrice(symbol: string, basePrice: number, timeMs: number): number {
-  const t = timeMs / 1000;
+// 新版价格公式：振幅更大、波动更剧烈
+function getPrice(symbol: string, basePrice: number, t: number): number {
   const seed = symbol.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const wave1 = Math.sin(t * 0.2 + seed * 0.7) * 0.12;
-  const wave2 = Math.sin(t * 0.53 + seed * 1.3) * 0.07;
-  const wave3 = Math.sin(t * 1.27 + seed * 2.1) * 0.04;
-  return Math.round(basePrice * (1 + wave1 + wave2 + wave3));
+  const wave1 = Math.sin(t * 0.8 + seed * 0.7) * 0.25;
+  const wave2 = Math.sin(t * 1.9 + seed * 1.3) * 0.15;
+  const wave3 = Math.sin(t * 3.7 + seed * 2.1) * 0.08;
+  const jitter = Math.sin(t * 12.3 + seed * 5.7) * 0.04;
+  return Math.round(basePrice * (1 + wave1 + wave2 + wave3 + jitter));
 }
 
-// GET：获取持仓 + 积分
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const deviceId = searchParams.get('device_id');
-
     if (!deviceId) {
       return NextResponse.json({ error: '缺少 device_id' }, { status: 400 });
     }
@@ -67,15 +65,15 @@ export async function GET(req: NextRequest) {
 
     // 计算持仓市值
     let totalValue = 0;
-    const positionList = (holdings || []).map((h) => {
+    const positions = (holdings || []).map((h) => {
       const price = prices[h.symbol] || 0;
       const value = price * h.quantity;
-      const cost = Number(h.avg_cost) * h.quantity;
+      const cost = h.avg_cost * h.quantity;
       totalValue += value;
       return {
         symbol: h.symbol,
         quantity: h.quantity,
-        avg_cost: Number(h.avg_cost),
+        avg_cost: h.avg_cost,
         current_price: price,
         value,
         cost,
@@ -88,12 +86,14 @@ export async function GET(req: NextRequest) {
         data: {
           points: user?.points || 0,
           prices,
-          holdings: positionList,
-          total_value: totalValue,
+          positions,
+          totalValue,
         },
       },
       {
-        headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' },
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
       }
     );
   } catch (e: any) {
