@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>股票市场</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body {
+    width:100%; min-height:100%; background:#0a0e17;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    color:#dfe8f5;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+  }
+
+  #app { max-width:640px; margin:0 auto; padding:70px 16px 100px; }
+
+  /* 顶部资金 */
+  #topBar {
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    background:rgba(10,16,26,0.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(90,160,220,0.2);
+    padding:12px 16px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  #topBar .label { font-size:11px; letter-spacing:2px; color:#6b87a8; }
+  #topBar .value {
+    font-size:22px; font-weight:800; color:#fbbf24;
+    font-variant-numeric:tabular-nums;
+  }
+  #topBar .right { text-align:right; }
+  #topBar .right .value { color:#22d3ee; }
+
+  /* 股票卡片 */
+  .stock {
+    background:linear-gradient(180deg, rgba(20,30,48,0.9), rgba(15,22,38,0.9));
+    border:1px solid rgba(90,160,220,0.2);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:10px;
+    transition:border-color 0.2s;
+  }
+  .stock:hover { border-color:rgba(90,160,220,0.4); }
+
+  .stock .row1 {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .stock .info {
+    display:flex; align-items:center; gap:10px;
+  }
+  .stock .icon { font-size:24px; }
+  .stock .name { font-size:15px; font-weight:700; }
+  .stock .symbol {
+    font-size:11px; color:#6b87a8; letter-spacing:1px;
+    font-family:monospace;
+  }
+
+  .stock .priceBox { text-align:right; }
+  .stock .price {
+    font-size:20px; font-weight:800; font-variant-numeric:tabular-nums;
+    transition:color 0.2s;
+  }
+  .stock .change {
+    font-size:12px; font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  .up { color:#22c55e; }
+  .down { color:#ef4444; }
+  .flat { color:#6b87a8; }
+
+  /* 走势图 */
+  .chart {
+    width:100%; height:44px;
+    margin-top:6px;
+  }
+
+  /* 按钮 */
+  .stock .actions {
+    display:flex; gap:8px; margin-top:10px;
+  }
+  .stock .actions button {
+    flex:1; padding:8px 0;
+    border-radius:8px; border:none;
+    font-size:13px; font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    transition:filter 0.15s;
+  }
+  .btn-buy {
+    background:linear-gradient(135deg, #16a34a, #22c55e);
+    color:#fff;
+  }
+  .btn-sell {
+    background:linear-gradient(135deg, #dc2626, #ef4444);
+    color:#fff;
+  }
+  .btn-buy:disabled, .btn-sell:disabled {
+    opacity:0.4; cursor:not-allowed;
+  }
+  .btn-buy:hover:not(:disabled) { filter:brightness(1.15); }
+  .btn-sell:hover:not(:disabled) { filter:brightness(1.15); }
+
+  /* 持仓信息 */
+  .holdingInfo {
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px solid rgba(90,160,220,0.15);
+    display:flex; justify-content:space-between;
+    font-size:12px; color:#8ba6c4;
+    font-family:monospace;
+  }
+
+  /* 弹窗 */
+  #modal {
+    position:fixed; inset:0; z-index:50;
+    background:rgba(0,0,0,0.75); backdrop-filter:blur(6px);
+    display:none; align-items:center; justify-content:center; padding:16px;
+  }
+  #modal.show { display:flex; }
+  #modalContent {
+    background:linear-gradient(180deg, #1a2638, #131b2a);
+    border:1px solid rgba(90,160,220,0.3);
+    border-radius:16px;
+    padding:24px;
+    max-width:400px; width:100%;
+  }
+  #modalContent h3 {
+    font-size:18px; margin-bottom:4px;
+  }
+  #modalContent .sub {
+    font-size:12px; color:#6b87a8; margin-bottom:16px;
+  }
+  #modalContent .priceLine {
+    display:flex; justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid rgba(90,160,220,0.15);
+    font-size:14px;
+  }
+  #modalContent .priceLine:last-of-type { border-bottom:none; }
+  #modalContent .priceLine .v {
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+  #qtyRow {
+    margin:16px 0;
+    display:flex; align-items:center; gap:8px;
+  }
+  #qtyRow label { font-size:13px; color:#8ba6c4; }
+  #qtyInput {
+    flex:1;
+    padding:10px 14px;
+    border-radius:10px;
+    background:rgba(10,16,26,0.8);
+    border:1px solid rgba(90,160,220,0.3);
+    color:#dfe8f5;
+    font-family:inherit;
+    font-size:15px;
+    outline:none;
+    font-variant-numeric:tabular-nums;
+  }
+  #qtyInput:focus { border-color:#22d3ee; }
+
+  .quickQty {
+    display:flex; gap:6px; margin-bottom:16px;
+  }
+  .quickQty button {
+    flex:1; padding:6px 0;
+    border-radius:8px;
+    background:rgba(90,160,220,0.1);
+    border:1px solid rgba(90,160,220,0.3);
+    color:#8ba6c4;
+    font-size:12px; font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .quickQty button:active { background:rgba(90,160,220,0.25); }
+
+  #modalContent .btnAction {
+    width:100%; padding:14px 0;
+    border-radius:10px; border:none;
+    font-size:15px; font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  #modalContent .btnCancel {
+    width:100%; padding:12px 0;
+    border-radius:10px;
+    background:transparent;
+    border:1px solid rgba(90,160,220,0.3);
+    color:#8ba6c4;
+    font-size:14px;
+    cursor:pointer;
+    font-family:inherit;
+    margin-top:8px;
+  }
+
+  /* 返回按钮 */
+  #backBtn {
+    position:fixed; top:14px; left:14px; z-index:20;
+    padding:8px 16px; border-radius:10px;
+    background:rgba(10,16,26,0.85); border:1px solid rgba(90,160,220,0.4);
+    color:#cfe8ff; font-size:13px; font-weight:600;
+    cursor:pointer; font-family:inherit; text-decoration:none;
+    backdrop-filter:blur(8px);
+  }
+
+  /* 提示消息 */
+  #toast {
+    position:fixed; top:80px; left:50%; transform:translateX(-50%);
+    background:rgba(34,197,94,0.95);
+    color:#fff;
+    padding:10px 24px;
+    border-radius:10px;
+    font-size:14px; font-weight:700;
+    z-index:100;
+    opacity:0;
+    transition:opacity 0.3s, transform 0.3s;
+    pointer-events:none;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(6px); }
+  #toast.error { background:rgba(239,68,68,0.95); }
+</style>
+</head>
+<body>
+
+<a id="backBtn" href="/games">← 返回</a>
+<div id="toast"></div>
+
+<div id="topBar">
+  <div>
+    <div class="label">积分</div>
+    <div class="value" id="uiPoints">0</div>
+  </div>
+  <div class="right">
+    <div class="label">持仓市值</div>
+    <div class="value" id="uiValue">0</div>
+  </div>
+</div>
+
+<div id="app"></div>
+
+<div id="modal">
+  <div id="modalContent"></div>
+</div>
+
+<script>
+// ============ 股票定义 ============
+const STOCKS = [
+  { symbol: 'GOLD', name: '黄金矿业', icon: '🥇', basePrice: 100 },
+  { symbol: 'TECH', name: '科技龙头', icon: '💻', basePrice: 200 },
+  { symbol: 'OIL',  name: '石油集团', icon: '🛢️', basePrice: 80 },
+  { symbol: 'FOOD', name: '食品公司', icon: '🍔', basePrice: 50 },
+  { symbol: 'BANK', name: '银行控股', icon: '🏦', basePrice: 150 },
+];
+
+// ============ 价格公式（和服务端一致）============
+function getPrice(symbol, basePrice, timeMs = Date.now()) {
+  const t = timeMs / 1000;
+  const seed = symbol.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const wave1 = Math.sin(t * 0.2 + seed * 0.7) * 0.12;
+  const wave2 = Math.sin(t * 0.53 + seed * 1.3) * 0.07;
+  const wave3 = Math.sin(t * 1.27 + seed * 2.1) * 0.04;
+  return Math.round(basePrice * (1 + wave1 + wave2 + wave3));
+}
+
+// ============ 状态 ============
+let myPoints = 0;
+let holdings = {}; // symbol -> { quantity, avg_cost }
+let priceHistory = {}; // symbol -> [prices...]
+const HISTORY_MAX = 40;
+
+function getDeviceId() {
+  let id = localStorage.getItem('device_id');
+  if (!id) {
+    id = 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('device_id', id);
+  }
+  return id;
+}
+
+// ============ 初始化历史 ============
+function initHistory() {
+  const now = Date.now();
+  for (const s of STOCKS) {
+    priceHistory[s.symbol] = [];
+    for (let i = HISTORY_MAX; i >= 0; i--) {
+      priceHistory[s.symbol].push(getPrice(s.symbol, s.basePrice, now - i * 2000));
+    }
+  }
+}
+
+// ============ 渲染 ============
+function render() {
+  const app = document.getElementById('app');
+  const now = Date.now();
+
+  let totalValue = 0;
+  const html = STOCKS.map((s) => {
+    const price = getPrice(s.symbol, s.basePrice, now);
+    const history = priceHistory[s.symbol];
+    const prev = history.length >= 2 ? history[history.length - 2] : price;
+    const change = price - prev;
+    const changePct = prev ? (change / prev) * 100 : 0;
+
+    const cls = change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
+    const sign = change > 0 ? '+' : '';
+
+    const h = holdings[s.symbol];
+    let holdingHtml = '';
+    if (h && h.quantity > 0) {
+      const value = price * h.quantity;
+      const cost = h.avg_cost * h.quantity;
+      const profit = value - cost;
+      const profitCls = profit > 0 ? 'up' : profit < 0 ? 'down' : 'flat';
+      totalValue += value;
+      holdingHtml = `
+        <div class="holdingInfo">
+          <span>持仓 ${h.quantity} @ ${h.avg_cost.toFixed(2)}</span>
+          <span class="${profitCls}">${profit >= 0 ? '+' : ''}${profit.toFixed(0)}</span>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="stock">
+        <div class="row1">
+          <div class="info">
+            <span class="icon">${s.icon}</span>
+            <div>
+              <div class="name">${s.name}</div>
+              <div class="symbol">${s.symbol}</div>
+            </div>
+          </div>
+          <div class="priceBox">
+            <div class="price ${cls}">${price}</div>
+            <div class="change ${cls}">${sign}${change} (${sign}${changePct.toFixed(1)}%)</div>
+          </div>
+        </div>
+        <svg class="chart" viewBox="0 0 200 44" preserveAspectRatio="none">
+          ${renderChart(history, cls)}
+        </svg>
+        <div class="actions">
+          <button class="btn-buy" onclick="openTrade('${s.symbol}', 'buy')">买入</button>
+          <button class="btn-sell" ${!h || h.quantity <= 0 ? 'disabled' : ''} onclick="openTrade('${s.symbol}', 'sell')">卖出</button>
+        </div>
+        ${holdingHtml}
+      </div>
+    `;
+  }).join('');
+
+  app.innerHTML = html;
+  document.getElementById('uiPoints').textContent = myPoints.toLocaleString();
+  document.getElementById('uiValue').textContent = totalValue.toLocaleString();
+}
+
+function renderChart(history, cls) {
+  if (history.length < 2) return '';
+  const min = Math.min(...history);
+  const max = Math.max(...history);
+  const range = max - min || 1;
+  const w = 200;
+  const h = 44;
+  const step = w / (history.length - 1);
+
+  const points = history.map((p, i) => {
+    const x = i * step;
+    const y = h - ((p - min) / range) * (h - 6) - 3;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const color = cls === 'up' ? '#22c55e' : cls === 'down' ? '#ef4444' : '#6b87a8';
+
+  return `
+    <polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+    <polyline points="0,${h} ${points} ${w},${h}" fill="${color}" opacity="0.1" stroke="none"/>
+  `;
+}
+
+// ============ 弹窗 ============
+let currentTrade = null;
+
+function openTrade(symbol, type) {
+  const stock = STOCKS.find((s) => s.symbol === symbol);
+  if (!stock) return;
+
+  const price = getPrice(symbol, stock.basePrice);
+  const h = holdings[symbol] || { quantity: 0, avg_cost: 0 };
+  const maxQty = type === 'buy'
+    ? Math.floor(myPoints / price)
+    : h.quantity;
+
+  currentTrade = { symbol, type, price, maxQty };
+
+  const modal = document.getElementById('modal');
+  const content = document.getElementById('modalContent');
+
+  content.innerHTML = `
+    <h3>${type === 'buy' ? '买入' : '卖出'} ${stock.icon} ${stock.name}</h3>
+    <div class="sub">当前价格 ${price} 积分/股</div>
+
+    <div class="priceLine">
+      <span>可用积分</span>
+      <span class="v" style="color:#fbbf24">${myPoints}</span>
+    </div>
+    ${type === 'sell' ? `
+      <div class="priceLine">
+        <span>持仓</span>
+        <span class="v" style="color:#22d3ee">${h.quantity} 股</span>
+      </div>
+    ` : ''}
+    <div class="priceLine">
+      <span>最多可${type === 'buy' ? '买' : '卖'}</span>
+      <span class="v" style="color:#8ba6c4">${maxQty} 股</span>
+    </div>
+
+    <div id="qtyRow">
+      <label>数量</label>
+      <input id="qtyInput" type="number" min="1" max="${maxQty}" value="1" inputmode="numeric">
+    </div>
+
+    <div class="quickQty">
+      ${[1, 5, 10, 'max'].map((q) => `
+        <button onclick="setQty('${q}')">${q === 'max' ? '全部' : q + '股'}</button>
+      `).join('')}
+    </div>
+
+    <div class="priceLine">
+      <span>总计</span>
+      <span class="v" id="totalAmount" style="color:#fbbf24">${price}</span>
+    </div>
+
+    <button class="btnAction ${type === 'buy' ? 'btn-buy' : 'btn-sell'}" onclick="confirmTrade()">
+      确认${type === 'buy' ? '买入' : '卖出'}
+    </button>
+    <button class="btnCancel" onclick="closeModal()">取消</button>
+  `;
+
+  modal.classList.add('show');
+
+  document.getElementById('qtyInput').addEventListener('input', updateTotal);
+  updateTotal();
+}
+
+function setQty(q) {
+  const input = document.getElementById('qtyInput');
+  if (q === 'max') input.value = currentTrade.maxQty;
+  else input.value = Math.min(q, currentTrade.maxQty);
+  updateTotal();
+}
+
+function updateTotal() {
+  const input = document.getElementById('qtyInput');
+  let qty = parseInt(input.value) || 0;
+  if (qty < 1) qty = 0;
+  if (qty > currentTrade.maxQty) {
+    qty = currentTrade.maxQty;
+    input.value = qty;
+  }
+  document.getElementById('totalAmount').textContent = qty * currentTrade.price;
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  currentTrade = null;
+}
+
+async function confirmTrade() {
+  const qty = parseInt(document.getElementById('qtyInput').value) || 0;
+  if (qty < 1) {
+    showToast('请输入有效数量', true);
+    return;
+  }
+
+  const { symbol, type } = currentTrade;
+  const btn = document.querySelector('#modalContent .btnAction');
+  btn.disabled = true;
+  btn.textContent = '处理中…';
+
+  try {
+    const res = await fetch(`/api/stocks/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        device_id: getDeviceId(),
+        symbol,
+        quantity: qty,
+      }),
+    });
+    const d = await res.json();
+
+    if (!res.ok) throw new Error(d.error || '交易失败');
+
+    if (type === 'buy') {
+      showToast(`买入成功 ${qty} 股 @ ${d.data.price}`);
+    } else {
+      const p = d.data.profit;
+      showToast(`${p >= 0 ? '赚' : '亏'} ${Math.abs(p)} 积分`);
+    }
+
+    closeModal();
+    await loadData();
+  } catch (e) {
+    showToast(e.message, true);
+    btn.disabled = false;
+    btn.textContent = `确认${type === 'buy' ? '买入' : '卖出'}`;
+  }
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'show error' : 'show';
+  setTimeout(() => { t.className = ''; }, 2000);
+}
+
+// ============ 数据加载 ============
+async function loadData() {
+  try {
+    const res = await fetch(`/api/stocks?device_id=${getDeviceId()}&t=${Date.now()}`, {
+      cache: 'no-store',
+    });
+    const d = await res.json();
+    if (d.data) {
+      myPoints = d.data.points;
+      holdings = {};
+      (d.data.holdings || []).forEach((h) => {
+        holdings[h.symbol] = { quantity: h.quantity, avg_cost: h.avg_cost };
+      });
+    }
+  } catch {}
+}
+
+// ============ 定时更新 ============
+function tick() {
+  const now = Date.now();
+  for (const s of STOCKS) {
+    const p = getPrice(s.symbol, s.basePrice, now);
+    const arr = priceHistory[s.symbol];
+    arr.push(p);
+    if (arr.length > HISTORY_MAX) arr.shift();
+  }
+  render();
+}
+
+// ============ 启动 ============
+initHistory();
+loadData().then(() => {
+  render();
+  setInterval(tick, 2000);
+  setInterval(loadData, 10000); // 每 10 秒同步一次持仓
+});
+</script>
+</body>
+</html>
