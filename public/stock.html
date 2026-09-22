@@ -397,29 +397,38 @@ function renderChart(history, cls) {
 // ============ 弹窗 ============
 let currentTrade = null;
 
-function openTrade(symbol, type) {
+async function openTrade(symbol, type) {
   const stock = STOCKS.find((s) => s.symbol === symbol);
   if (!stock) return;
-
+  // 先拉一次最新积分和持仓
+  await loadData();
   const price = getPrice(symbol, stock.basePrice);
   const h = holdings[symbol] || { quantity: 0, avg_cost: 0 };
+  // 买入：留 5% 缓冲，防止下单瞬间价格涨了积分不够
   const maxQty = type === 'buy'
-    ? Math.floor(myPoints / price)
+    ? Math.floor((myPoints * 0.95) / price)
     : h.quantity;
-
+  if (type === 'buy' && maxQty < 1) {
+    showToast('积分不足，至少需要 ' + price + ' 积分', true);
+    return;
+  }
   currentTrade = { symbol, type, price, maxQty };
-
   const modal = document.getElementById('modal');
   const content = document.getElementById('modalContent');
-
   content.innerHTML = `
     <h3>${type === 'buy' ? '买入' : '卖出'} ${stock.icon} ${stock.name}</h3>
     <div class="sub">当前价格 ${price} 积分/股</div>
 
-    <div class="priceLine">
-      <span>可用积分</span>
-      <span class="v" style="color:#fbbf24">${myPoints}</span>
-    </div>
+     <div class="priceLine">
+        <span>可用积分</span>
+        <span class="v" style="color:#fbbf24">${myPoints}</span>
+      </div>
+      ${type === 'buy' ? `
+      <div class="priceLine">
+        <span style="font-size:11px;color:#6b87a8">买入预算（留 5% 缓冲）</span>
+        <span class="v" style="font-size:12px;color:#8ba6c4">${Math.floor(myPoints * 0.95)}</span>
+      </div>
+      ` : ''}
     ${type === 'sell' ? `
       <div class="priceLine">
         <span>持仓</span>
@@ -488,8 +497,9 @@ async function confirmTrade() {
     showToast('请输入有效数量', true);
     return;
   }
-
   const { symbol, type } = currentTrade;
+  // 下单前再刷一次，确保积分是最新的
+  await loadData();
   const btn = document.querySelector('#modalContent .btnAction');
   btn.disabled = true;
   btn.textContent = '处理中…';
@@ -504,9 +514,14 @@ async function confirmTrade() {
         quantity: qty,
       }),
     });
-    const d = await res.json();
-
-    if (!res.ok) throw new Error(d.error || '交易失败');
+       const d = await res.json();
+    if (!res.ok) {
+      // 积分不足时，提示具体差多少
+      if (d.error && d.error.includes('积分不足')) {
+        throw new Error(d.error + '（价格波动导致，请减少数量重试）');
+      }
+      throw new Error(d.error || '交易失败');
+    }
 
     if (type === 'buy') {
       showToast(`买入成功 ${qty} 股 @ ${d.data.price}`);
