@@ -268,10 +268,16 @@ const STOCKS = [
 function getPrice(symbol, basePrice, timeMs = Date.now()) {
   const t = timeMs / 1000;
   const seed = symbol.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const wave1 = Math.sin(t * 0.2 + seed * 0.7) * 0.12;
-  const wave2 = Math.sin(t * 0.53 + seed * 1.3) * 0.07;
-  const wave3 = Math.sin(t * 1.27 + seed * 2.1) * 0.04;
-  return Math.round(basePrice * (1 + wave1 + wave2 + wave3));
+  // 5 层波动叠加，幅度猛、周期短，模拟暴涨暴跌
+  const wave1 = Math.sin(t * 0.85 + seed * 0.7) * 0.45;   // 主趋势 ~7.4 秒
+  const wave2 = Math.sin(t * 1.9 + seed * 1.3) * 0.28;    // 次趋势 ~3.3 秒
+  const wave3 = Math.sin(t * 4.1 + seed * 2.1) * 0.16;    // 快波动 ~1.5 秒
+  const wave4 = Math.sin(t * 8.3 + seed * 3.7) * 0.09;    // 极快抖动 ~0.76 秒
+  const wave5 = Math.sin(t * 15.7 + seed * 5.3) * 0.05;   // 高频噪音 ~0.4 秒
+  const price = basePrice * (1 + wave1 + wave2 + wave3 + wave4 + wave5);
+  // 保底：不低于基础价的 10%，防止价格跌到负数或接近 0
+  const minPrice = basePrice * 0.1;
+  return Math.round(Math.max(price, minPrice) * 100) / 100;
 }
 
 // ============ 状态 ============
