@@ -535,7 +535,7 @@ async function loadData() {
     if (d.data) {
       myPoints = d.data.points;
       holdings = {};
-      (d.data.holdings || []).forEach((h) => {
+      (d.data.positions || []).forEach((h) => {
         holdings[h.symbol] = { quantity: h.quantity, avg_cost: Number(h.avg_cost) || 0 };
       });
     }
