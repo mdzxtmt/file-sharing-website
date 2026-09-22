@@ -402,17 +402,18 @@ async function openTrade(symbol, type) {
   if (!stock) return;
   // 先拉一次最新积分和持仓
   await loadData();
-  const price = getPrice(symbol, stock.basePrice);
+  // 锁定时间戳和价格，弹窗期间不再变化
+  const lockedTime = Date.now();
+  const price = getPrice(symbol, stock.basePrice, lockedTime);
   const h = holdings[symbol] || { quantity: 0, avg_cost: 0 };
-  // 买入：留 5% 缓冲，防止下单瞬间价格涨了积分不够
   const maxQty = type === 'buy'
-    ? Math.floor((myPoints * 0.95) / price)
+    ? Math.floor(myPoints / price)
     : h.quantity;
   if (type === 'buy' && maxQty < 1) {
     showToast('积分不足，至少需要 ' + price + ' 积分', true);
     return;
   }
-  currentTrade = { symbol, type, price, maxQty };
+  currentTrade = { symbol, type, price, maxQty, lockedTime };
   const modal = document.getElementById('modal');
   const content = document.getElementById('modalContent');
   content.innerHTML = `
@@ -512,6 +513,7 @@ async function confirmTrade() {
         device_id: getDeviceId(),
         symbol,
         quantity: qty,
+        locked_time: currentTrade.lockedTime,
       }),
     });
        const d = await res.json();

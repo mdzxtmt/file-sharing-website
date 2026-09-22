@@ -41,7 +41,7 @@ function getPrice(symbol, basePrice, timeMs = Date.now()) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { device_id, symbol, quantity } = await req.json();
+    const { device_id, symbol, quantity, locked_time } = await req.json();
     if (!device_id || !symbol) {
       return NextResponse.json({ error: '缺少参数' }, { status: 400 });
     }
@@ -56,9 +56,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '股票不存在' }, { status: 400 });
     }
 
-    // 最新价格
+    // 用客户端锁定的时间戳算价格（有效期内）
     const now = Date.now();
-    const price = getPrice(symbol, stock.basePrice, now);
+    const LOCK_MAX_AGE = 60000; // 60 秒有效期
+    const useTime = (locked_time && typeof locked_time === 'number' && now - locked_time < LOCK_MAX_AGE)
+      ? locked_time
+      : now;
+    const price = getPrice(symbol, stock.basePrice, useTime);
     const total = price * qty;
 
     // 用户
