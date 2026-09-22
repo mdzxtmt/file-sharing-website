@@ -317,10 +317,11 @@ function render() {
     const sign = change > 0 ? '+' : '';
 
     const h = holdings[s.symbol];
-    let holdingHtml = '';
-    if (h && h.quantity > 0) {
-      const value = price * h.quantity;
-      const cost = h.avg_cost * h.quantity;
+      let holdingHtml = '';
+      if (h && h.quantity > 0) {
+        const avgCost = Number(h.avg_cost) || 0;
+        const value = price * h.quantity;
+        const cost = avgCost * h.quantity;
       const profit = value - cost;
       const profitCls = profit > 0 ? 'up' : profit < 0 ? 'down' : 'flat';
       totalValue += value;
@@ -535,7 +536,7 @@ async function loadData() {
       myPoints = d.data.points;
       holdings = {};
       (d.data.holdings || []).forEach((h) => {
-        holdings[h.symbol] = { quantity: h.quantity, avg_cost: h.avg_cost };
+        holdings[h.symbol] = { quantity: h.quantity, avg_cost: Number(h.avg_cost) || 0 };
       });
     }
   } catch {}
